@@ -1,20 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Star, MapPin, X } from 'lucide-react'
+import { supabase } from './supabase'
 import './index.css'
 
 export default function App() {
   const [selectedService, setSelectedService] = useState(null);
+  const [services, setServices] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
-  const services = [
-    { id: 1, name: 'Corte Clásico', duration: '45 min', price: '15€', description: 'Corte a tijera o máquina con asesoramiento.' },
-    { id: 2, name: 'Corte + Barba', duration: '1h 15 min', price: '22€', description: 'Arreglo completo de cabello y barba con toalla caliente.' },
-    { id: 3, name: 'Tinte o Mechas', duration: '2h', price: '35€', description: 'Coloración completa o mechas con productos premium.' },
-  ];
-
-  const reviews = [
-    { id: 1, name: 'Carlos M.', stars: 5, text: 'El mejor trato de la ciudad. Siempre salgo encantado con el corte.', service: 'Corte + Barba' },
-    { id: 2, name: 'Laura G.', stars: 5, text: 'Súper puntual y el local está impecable. Recomendado 100%.', service: 'Tinte o Mechas' },
-  ];
+  useEffect(() => {
+    async function fetchData() {
+      const { data: servicesData } = await supabase.from('services').select('*').order('id');
+      if (servicesData) setServices(servicesData);
+      
+      const { data: reviewsData } = await supabase.from('reviews').select('*').order('id', { ascending: false });
+      if (reviewsData) setReviews(reviewsData);
+    }
+    fetchData();
+  }, []);
 
   return (
     <div className="mobile-container">
