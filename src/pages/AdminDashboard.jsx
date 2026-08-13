@@ -138,21 +138,18 @@ export default function AdminDashboard({ session, onLogout }) {
 
   // --- CONFIGURACIÓN DEL CALENDARIO ---
   const startHour = 9; 
-  const endHour = 19;  
+  const endHour = 18;  
   const pixelsPerHour = 100; // Más altura para poder ver bien los huecos de 15 minutos
 
-  // Colores muy pastel con texto oscuro para buen contraste
+  // Colores pastel elegantes y empolvados (premium)
   const appColors = [
-    { bg: '#fecaca', text: '#991b1b' }, // rojo pastel
-    { bg: '#fef08a', text: '#854d0e' }, // amarillo pastel
-    { bg: '#bbf7d0', text: '#166534' }, // verde pastel
-    { bg: '#bfdbfe', text: '#1e40af' }, // azul pastel
-    { bg: '#e9d5ff', text: '#6b21a8' }, // morado pastel
-    { bg: '#fed7aa', text: '#9a3412' }, // naranja pastel
-    { bg: '#fbcfe8', text: '#9d174d' }, // rosa pastel
-    { bg: '#a7f3d0', text: '#065f46' }, // esmeralda pastel
-    { bg: '#ddd6fe', text: '#5b21b6' }, // violeta pastel
-    { bg: '#f5d0fe', text: '#86198f' }  // fucsia pastel
+    { bg: '#F8E8E6', text: '#5D4037', border: '#E8D0CC' }, // Rose
+    { bg: '#E9ECE5', text: '#334E39', border: '#CCD1C5' }, // Sage
+    { bg: '#E6E2DF', text: '#4A413C', border: '#CEC8C3' }, // Warm Grey
+    { bg: '#F0E5DE', text: '#6D4C41', border: '#DBC9C0' }, // Peach
+    { bg: '#E3E6E8', text: '#37474F', border: '#C5CCD1' }, // Blue-Grey
+    { bg: '#EBE4EB', text: '#4A344A', border: '#D3C5D3' }, // Mauve
+    { bg: '#F5EEDB', text: '#5D5030', border: '#E0D5B8' }, // Vanilla
   ];
 
   const getDaysOfWeek = (date) => {
@@ -262,6 +259,14 @@ export default function AdminDashboard({ session, onLogout }) {
                     </div>
                   )
                 })}
+                {/* 19:00 exact label at the very bottom edge */}
+                <div style={{ display: 'flex', height: '0px', position: 'relative' }}>
+                  <div style={{ width: '60px', color: 'var(--secondary)', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', transform: 'translateY(-50%)' }}>
+                      19:00
+                    </div>
+                  </div>
+                </div>
 
                 {appointments.map((app) => {
                   if (!app.appointment_time) return null;
@@ -279,7 +284,7 @@ export default function AdminDashboard({ session, onLogout }) {
                       <div style={{
                         backgroundColor: colorTheme.bg, color: colorTheme.text, height: '100%', borderRadius: '8px', padding: '8px 12px',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden',
-                        border: `1px solid ${colorTheme.text}20` // Borde muy sutil del mismo tono
+                        border: `1px solid ${colorTheme.border}` // Borde elegante
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                           <span style={{ fontWeight: 600, fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.client_name}</span>
