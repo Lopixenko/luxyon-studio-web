@@ -141,15 +141,14 @@ export default function AdminDashboard({ session, onLogout }) {
   const endHour = 19;  
   const pixelsPerHour = 100; // Más altura para poder ver bien los huecos de 15 minutos
 
-  // Colores pastel elegantes y empolvados (premium)
+  // Colores extraídos del diseño de referencia (pastel con borde lateral fuerte)
   const appColors = [
-    { bg: '#F8E8E6', text: '#5D4037', border: '#E8D0CC' }, // Rose
-    { bg: '#E9ECE5', text: '#334E39', border: '#CCD1C5' }, // Sage
-    { bg: '#E6E2DF', text: '#4A413C', border: '#CEC8C3' }, // Warm Grey
-    { bg: '#F0E5DE', text: '#6D4C41', border: '#DBC9C0' }, // Peach
-    { bg: '#E3E6E8', text: '#37474F', border: '#C5CCD1' }, // Blue-Grey
-    { bg: '#EBE4EB', text: '#4A344A', border: '#D3C5D3' }, // Mauve
-    { bg: '#F5EEDB', text: '#5D5030', border: '#E0D5B8' }, // Vanilla
+    { bg: '#E0F2F1', border: '#00BFA5' }, // Cyan
+    { bg: '#EDE7F6', border: '#651FFF' }, // Purple
+    { bg: '#E8F5E9', border: '#00C853' }, // Green
+    { bg: '#FFEBEE', border: '#FF1744' }, // Red
+    { bg: '#FFF3E0', border: '#FF9100' }, // Orange
+    { bg: '#E3F2FD', border: '#2979FF' }, // Blue
   ];
 
   const getDaysOfWeek = (date) => {
@@ -238,17 +237,17 @@ export default function AdminDashboard({ session, onLogout }) {
                   return (
                     <div key={hour} style={{ display: 'flex', height: `${pixelsPerHour}px`, position: 'relative' }}>
                       <div style={{ width: '60px', color: 'var(--secondary)', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
+                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '8px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
                           {hour.toString().padStart(2, '0')}:00
                         </div>
-                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
-                          {hour.toString().padStart(2, '0')}:15
+                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '12px', fontSize: '0.65rem', fontWeight: 500, color: '#94a3b8' }}>
+                          15
                         </div>
-                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
-                          {hour.toString().padStart(2, '0')}:30
+                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '12px', fontSize: '0.65rem', fontWeight: 500, color: '#94a3b8' }}>
+                          30
                         </div>
-                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
-                          {hour.toString().padStart(2, '0')}:45
+                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '12px', fontSize: '0.65rem', fontWeight: 500, color: '#94a3b8' }}>
+                          45
                         </div>
                       </div>
                       <div style={{ flex: 1, backgroundColor: '#fafafa', position: 'relative', borderBottom: '1px solid #e2e8f0' }}>
@@ -260,6 +259,17 @@ export default function AdminDashboard({ session, onLogout }) {
                   )
                 })}
 
+                {/* Línea roja de hora actual */}
+                {getDateString(new Date()) === getDateString(selectedDate) && new Date().getHours() >= startHour && new Date().getHours() <= endHour && (
+                  <div style={{
+                    position: 'absolute',
+                    top: `${((new Date().getHours() - startHour) * pixelsPerHour) + ((new Date().getMinutes() / 60) * pixelsPerHour)}px`,
+                    left: 0, right: 0, height: '1px', backgroundColor: '#ef4444', zIndex: 15
+                  }}>
+                    <div style={{ position: 'absolute', left: '56px', top: '-4px', width: '9px', height: '9px', borderRadius: '50%', backgroundColor: '#ef4444' }}></div>
+                  </div>
+                )}
+
                 {appointments.map((app) => {
                   if (!app.appointment_time) return null;
                   const [hStr, mStr] = app.appointment_time.split(':');
@@ -270,27 +280,34 @@ export default function AdminDashboard({ session, onLogout }) {
                   const durationMins = parseDuration(app.services?.duration);
                   const height = (durationMins / 60) * pixelsPerHour;
                   const colorTheme = appColors[app.id % appColors.length];
+                  
+                  // Calculate end time
+                  const endMins = h * 60 + m + durationMins;
+                  const endH = Math.floor(endMins / 60);
+                  const endM = endMins % 60;
+                  const endTimeStr = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
 
                   return (
                     <div key={app.id} style={{ position: 'absolute', top: `${top}px`, left: '60px', right: '0px', height: `${height}px`, padding: '2px 8px', zIndex: 10 }}>
                       <div style={{
-                        backgroundColor: colorTheme.bg, color: colorTheme.text, height: '100%', borderRadius: '8px', padding: '8px 12px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden',
-                        border: `1px solid ${colorTheme.border}` // Borde elegante
+                        backgroundColor: colorTheme.bg, height: '100%', borderRadius: '8px', padding: '6px 10px',
+                        display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden',
+                        borderLeft: `4px solid ${colorTheme.border}`,
+                        color: '#1e293b'
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <span style={{ fontWeight: 600, fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.client_name}</span>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.9 }}>{app.appointment_time.substring(0,5)}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>{app.appointment_time.substring(0,5)} - {endTimeStr}</span>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); notifyClient(app); }}
+                            title="Notificar por WhatsApp"
+                            style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', flexShrink: 0 }}
+                          >
+                            <MessageCircle size={12} />
+                          </button>
                         </div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 500, opacity: 0.9, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.services?.name}</span>
-                        
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); notifyClient(app); }}
-                          title="Notificar por WhatsApp"
-                          style={{ position: 'absolute', bottom: '8px', right: '8px', background: `${colorTheme.text}20`, border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colorTheme.text, cursor: 'pointer' }}
-                        >
-                          <MessageCircle size={14} />
-                        </button>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}>
+                          {app.client_name} • {app.services?.name}
+                        </span>
                       </div>
                     </div>
                   )
