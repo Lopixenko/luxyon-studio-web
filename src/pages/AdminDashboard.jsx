@@ -231,29 +231,39 @@ export default function AdminDashboard({ session, onLogout }) {
             {loading ? (
               <p style={{ textAlign: 'center', color: 'var(--secondary)' }}>Cargando agenda...</p>
             ) : (
-              <div style={{ position: 'relative', backgroundColor: 'white', borderRadius: '12px', border: '1px solid var(--border)', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+              <div style={{ position: 'relative', backgroundColor: 'white', borderRadius: '12px', border: '1px solid var(--border)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
                 {Array.from({ length: endHour - startHour + 1 }).map((_, i) => {
                   const hour = startHour + i;
+                  const isLastHour = hour === endHour;
+                  
                   return (
-                    <div key={hour} style={{ display: 'flex', height: `${pixelsPerHour}px`, position: 'relative' }}>
+                    <div key={hour} style={{ display: 'flex', height: isLastHour ? `${pixelsPerHour / 4}px` : `${pixelsPerHour}px`, position: 'relative' }}>
                       <div style={{ width: '60px', color: 'var(--secondary)', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '8px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
+                        <div style={{ height: isLastHour ? '100%' : '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '8px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
                           {hour.toString().padStart(2, '0')}:00
                         </div>
-                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '12px', fontSize: '0.65rem', fontWeight: 500, color: '#94a3b8' }}>
-                          15
-                        </div>
-                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '12px', fontSize: '0.65rem', fontWeight: 500, color: '#94a3b8' }}>
-                          30
-                        </div>
-                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '12px', fontSize: '0.65rem', fontWeight: 500, color: '#94a3b8' }}>
-                          45
-                        </div>
+                        {!isLastHour && (
+                          <>
+                            <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '12px', fontSize: '0.65rem', fontWeight: 500, color: '#94a3b8' }}>
+                              15
+                            </div>
+                            <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '12px', fontSize: '0.65rem', fontWeight: 500, color: '#94a3b8' }}>
+                              30
+                            </div>
+                            <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '12px', fontSize: '0.65rem', fontWeight: 500, color: '#94a3b8' }}>
+                              45
+                            </div>
+                          </>
+                        )}
                       </div>
-                      <div style={{ flex: 1, backgroundColor: '#fafafa', position: 'relative', borderBottom: '1px solid #e2e8f0' }}>
-                        <div style={{ position: 'absolute', top: '25%', left: 0, right: 0, borderTop: '1px dashed #e2e8f0' }}></div>
-                        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, borderTop: '1px solid #cbd5e1' }}></div>
-                        <div style={{ position: 'absolute', top: '75%', left: 0, right: 0, borderTop: '1px dashed #e2e8f0' }}></div>
+                      <div style={{ flex: 1, backgroundColor: '#fafafa', position: 'relative', borderBottom: isLastHour ? 'none' : '1px solid #e2e8f0' }}>
+                        {!isLastHour && (
+                          <>
+                            <div style={{ position: 'absolute', top: '25%', left: 0, right: 0, borderTop: '1px dashed #e2e8f0' }}></div>
+                            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, borderTop: '1px solid #cbd5e1' }}></div>
+                            <div style={{ position: 'absolute', top: '75%', left: 0, right: 0, borderTop: '1px dashed #e2e8f0' }}></div>
+                          </>
+                        )}
                       </div>
                     </div>
                   )
