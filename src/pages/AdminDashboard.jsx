@@ -8,7 +8,6 @@ export default function AdminDashboard({ session, onLogout }) {
   // --- AGENDA STATE ---
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
-  const todayStr = new Date().toISOString().split('T')[0]
   const [selectedDate, setSelectedDate] = useState(new Date())
 
   // --- CITAS LIST STATE ---
@@ -24,7 +23,6 @@ export default function AdminDashboard({ session, onLogout }) {
   
   const [isSaving, setIsSaving] = useState(false)
 
-  // Fix timezone issue when selecting dates
   const getDateString = (d) => {
     const offset = d.getTimezoneOffset()
     const safeDate = new Date(d.getTime() - (offset*60*1000))
@@ -115,7 +113,7 @@ export default function AdminDashboard({ session, onLogout }) {
       
     setIsSaving(false)
     if (error) {
-      alert("Error al guardar la clienta. ¿Has ejecutado el SQL de actualizar clientes?")
+      alert("Error al guardar la clienta.")
     } else {
       setEditingClient(null)
       fetchClients() 
@@ -138,10 +136,24 @@ export default function AdminDashboard({ session, onLogout }) {
     return isNaN(minutes) || minutes === 0 ? 60 : minutes;
   }
 
+  // --- CONFIGURACIÓN DEL CALENDARIO ---
   const startHour = 9; 
-  const endHour = 21;  
-  const pixelsPerHour = 70; 
-  const appColors = ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#4ade80', '#2dd4bf', '#38bdf8', '#818cf8', '#a78bfa', '#f472b6'];
+  const endHour = 19;  
+  const pixelsPerHour = 100; // Más altura para poder ver bien los huecos de 15 minutos
+
+  // Colores muy pastel con texto oscuro para buen contraste
+  const appColors = [
+    { bg: '#fecaca', text: '#991b1b' }, // rojo pastel
+    { bg: '#fef08a', text: '#854d0e' }, // amarillo pastel
+    { bg: '#bbf7d0', text: '#166534' }, // verde pastel
+    { bg: '#bfdbfe', text: '#1e40af' }, // azul pastel
+    { bg: '#e9d5ff', text: '#6b21a8' }, // morado pastel
+    { bg: '#fed7aa', text: '#9a3412' }, // naranja pastel
+    { bg: '#fbcfe8', text: '#9d174d' }, // rosa pastel
+    { bg: '#a7f3d0', text: '#065f46' }, // esmeralda pastel
+    { bg: '#ddd6fe', text: '#5b21b6' }, // violeta pastel
+    { bg: '#f5d0fe', text: '#86198f' }  // fucsia pastel
+  ];
 
   const getDaysOfWeek = (date) => {
     const d = new Date(date);
@@ -227,11 +239,16 @@ export default function AdminDashboard({ session, onLogout }) {
                 {Array.from({ length: endHour - startHour + 1 }).map((_, i) => {
                   const hour = startHour + i;
                   return (
-                    <div key={hour} style={{ display: 'flex', borderBottom: '1px solid #f1f5f9', height: `${pixelsPerHour}px` }}>
-                      <div style={{ width: '60px', padding: '8px', color: 'var(--secondary)', fontSize: '0.75rem', fontWeight: 500, borderRight: '1px solid #f1f5f9', textAlign: 'center' }}>
+                    <div key={hour} style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', height: `${pixelsPerHour}px` }}>
+                      <div style={{ width: '60px', padding: '8px', color: 'var(--secondary)', fontSize: '0.75rem', fontWeight: 500, borderRight: '1px solid #e2e8f0', textAlign: 'center' }}>
                         {hour.toString().padStart(2, '0')}:00
                       </div>
-                      <div style={{ flex: 1, backgroundColor: '#fafafa' }}></div>
+                      <div style={{ flex: 1, backgroundColor: '#fafafa', position: 'relative' }}>
+                        {/* Líneas guía de cuartos de hora */}
+                        <div style={{ position: 'absolute', top: '25%', left: 0, right: 0, borderTop: '1px dashed #f1f5f9' }}></div>
+                        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, borderTop: '1px solid #e2e8f0' }}></div>
+                        <div style={{ position: 'absolute', top: '75%', left: 0, right: 0, borderTop: '1px dashed #f1f5f9' }}></div>
+                      </div>
                     </div>
                   )
                 })}
@@ -245,24 +262,25 @@ export default function AdminDashboard({ session, onLogout }) {
                   const top = (h - startHour) * pixelsPerHour + (m / 60) * pixelsPerHour;
                   const durationMins = parseDuration(app.services?.duration);
                   const height = (durationMins / 60) * pixelsPerHour;
-                  const bgColor = appColors[app.id % appColors.length];
+                  const colorTheme = appColors[app.id % appColors.length];
 
                   return (
                     <div key={app.id} style={{ position: 'absolute', top: `${top}px`, left: '60px', right: '0px', height: `${height}px`, padding: '2px 8px', zIndex: 10 }}>
                       <div style={{
-                        backgroundColor: bgColor, color: 'white', height: '100%', borderRadius: '8px', padding: '8px 12px',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden'
+                        backgroundColor: colorTheme.bg, color: colorTheme.text, height: '100%', borderRadius: '8px', padding: '8px 12px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden',
+                        border: `1px solid ${colorTheme.text}20` // Borde muy sutil del mismo tono
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                          <span style={{ fontWeight: 600, fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>{app.client_name}</span>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.95, textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>{app.appointment_time.substring(0,5)}</span>
+                          <span style={{ fontWeight: 600, fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.client_name}</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.9 }}>{app.appointment_time.substring(0,5)}</span>
                         </div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 500, opacity: 0.95, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>{app.services?.name}</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 500, opacity: 0.9, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.services?.name}</span>
                         
                         <button 
                           onClick={(e) => { e.stopPropagation(); notifyClient(app); }}
                           title="Notificar por WhatsApp"
-                          style={{ position: 'absolute', bottom: '8px', right: '8px', background: 'rgba(0,0,0,0.15)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }}
+                          style={{ position: 'absolute', bottom: '8px', right: '8px', background: `${colorTheme.text}20`, border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colorTheme.text, cursor: 'pointer' }}
                         >
                           <MessageCircle size={14} />
                         </button>
