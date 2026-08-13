@@ -333,27 +333,45 @@ export default function AdminDashboard({ session, onLogout }) {
                     <div 
                       key={app.id} 
                       onClick={() => setEditingApp(app)}
-                      style={{ position: 'absolute', top: `${top}px`, left: '60px', right: '0px', height: `${height}px`, padding: '2px 8px', zIndex: 10, cursor: 'pointer' }}
+                      style={{ position: 'absolute', top: `${top}px`, left: '60px', right: '0px', height: `${height}px`, padding: '1px 8px', zIndex: 10, cursor: 'pointer' }}
                     >
                       <div style={{
-                        backgroundColor: colorTheme.bg, height: '100%', borderRadius: '8px', padding: '6px 10px',
-                        display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden',
+                        backgroundColor: colorTheme.bg, height: '100%', borderRadius: '8px', 
+                        padding: durationMins <= 20 ? '0 8px' : '6px 10px',
+                        display: 'flex', 
+                        flexDirection: durationMins <= 20 ? 'row' : 'column', 
+                        position: 'relative', overflow: 'hidden',
+                        alignItems: durationMins <= 20 ? 'center' : 'stretch',
                         borderLeft: `4px solid ${colorTheme.border}`,
-                        color: '#1e293b'
+                        color: '#1e293b',
+                        gap: durationMins <= 20 ? '8px' : '0'
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px' }}>
-                          <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>{app.appointment_time.substring(0,5)} - {endTimeStr}</span>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); notifyClient(app); }}
-                            title="Notificar por WhatsApp"
-                            style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', flexShrink: 0 }}
-                          >
-                            <MessageCircle size={12} />
-                          </button>
-                        </div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2 }}>
-                          {app.client_name} • {app.services?.name}
-                        </span>
+                        {durationMins <= 20 ? (
+                          // Diseño compacto para 15 minutos
+                          <>
+                            <span style={{ fontWeight: 700, fontSize: '0.75rem', whiteSpace: 'nowrap' }}>{app.appointment_time.substring(0,5)}</span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+                              {app.client_name}
+                            </span>
+                          </>
+                        ) : (
+                          // Diseño normal para 30+ minutos
+                          <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px' }}>
+                              <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>{app.appointment_time.substring(0,5)} - {endTimeStr}</span>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); notifyClient(app); }}
+                                title="Notificar por WhatsApp"
+                                style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', flexShrink: 0 }}
+                              >
+                                <MessageCircle size={12} />
+                              </button>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: durationMins <= 30 ? 1 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {app.client_name} • {app.services?.name}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   )
