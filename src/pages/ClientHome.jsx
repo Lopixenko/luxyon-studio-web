@@ -36,6 +36,13 @@ export default function ClientHome() {
     
     setIsSubmitting(true);
     
+    // 1. Guardar o actualizar la Clienta en el nuevo CRM (usando el teléfono como ID único)
+    await supabase.from('clients').upsert({
+      name: clientName,
+      phone: clientPhone
+    }, { onConflict: 'phone' });
+
+    // 2. Guardar la cita normal
     const { error } = await supabase.from('appointments').insert([
       {
         service_id: selectedService.id,
