@@ -10,11 +10,16 @@ export default function AdminDashboard({ session, onLogout }) {
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date())
 
-  // --- CITAS LIST STATE ---
-  const [allAppointments, setAllAppointments] = useState([])
   const [allServices, setAllServices] = useState([])
-  const [loadingList, setLoadingList] = useState(false)
   const [editingApp, setEditingApp] = useState(null)
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      const { data } = await supabase.from('services').select('*').order('id')
+      if (data) setAllServices(data)
+    }
+    fetchServices()
+  }, [])
   
   // --- CLIENTAS STATE ---
   const [clients, setClients] = useState([])
@@ -37,17 +42,6 @@ export default function AdminDashboard({ session, onLogout }) {
     setLoading(false)
   }
 
-  const fetchAllList = async () => {
-    setLoadingList(true)
-    const { data } = await supabase.from('appointments').select('*, services(name, duration)').order('appointment_date', { ascending: false }).limit(50)
-    if (data) setAllAppointments(data)
-    
-    const { data: srvData } = await supabase.from('services').select('*').order('id')
-    if (srvData) setAllServices(srvData)
-    
-    setLoadingList(false)
-  }
-
   const fetchClients = async () => {
     setLoadingClients(true)
     const { data } = await supabase.from('clients').select('*').order('name')
@@ -58,8 +52,6 @@ export default function AdminDashboard({ session, onLogout }) {
   useEffect(() => {
     if (activeTab === 'agenda') {
       fetchAgenda()
-    } else if (activeTab === 'citas') {
-      fetchAllList()
     } else if (activeTab === 'clientas') {
       fetchClients()
     }
@@ -94,7 +86,7 @@ export default function AdminDashboard({ session, onLogout }) {
       alert("Error al guardar la cita.")
     } else {
       setEditingApp(null)
-      fetchAllList() 
+      fetchAgenda() 
     }
   }
 
@@ -176,7 +168,7 @@ export default function AdminDashboard({ session, onLogout }) {
   return (
     <div className="mobile-container" style={{ paddingBottom: '80px', backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
       <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', backgroundColor: 'var(--surface)' }}>
-        <h1 style={{ fontSize: '1.25rem', color: 'var(--primary)', fontWeight: 600 }}>Panel Admin</h1>
+        <h1 style={{ fontSize: '1.25rem', color: 'var(--primary)', fontWeight: 600 }}>Luxy On Administración</h1>
         <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'var(--secondary)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
           <LogOut size={18} />
           <span style={{ fontSize: '0.875rem' }}>Salir</span>
@@ -298,7 +290,11 @@ export default function AdminDashboard({ session, onLogout }) {
                   const endTimeStr = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
 
                   return (
-                    <div key={app.id} style={{ position: 'absolute', top: `${top}px`, left: '60px', right: '0px', height: `${height}px`, padding: '2px 8px', zIndex: 10 }}>
+                    <div 
+                      key={app.id} 
+                      onClick={() => setEditingApp(app)}
+                      style={{ position: 'absolute', top: `${top}px`, left: '60px', right: '0px', height: `${height}px`, padding: '2px 8px', zIndex: 10, cursor: 'pointer' }}
+                    >
                       <div style={{
                         backgroundColor: colorTheme.bg, height: '100%', borderRadius: '8px', padding: '6px 10px',
                         display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden',
@@ -328,36 +324,7 @@ export default function AdminDashboard({ session, onLogout }) {
         </>
       )}
 
-      {/* -------------------- TAB CITAS (LISTA) -------------------- */}
-      {activeTab === 'citas' && (
-        <div style={{ padding: '24px 16px' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '16px', color: 'var(--text)' }}>Gestión de Citas</h2>
-          
-          {loadingList ? (
-            <p style={{ textAlign: 'center', color: 'var(--secondary)' }}>Cargando lista...</p>
-          ) : allAppointments.length === 0 ? (
-            <p style={{ textAlign: 'center', color: 'var(--secondary)' }}>No hay citas registradas.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {allAppointments.map(app => (
-                <div key={app.id} style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                  <div>
-                    <h3 style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '4px' }}>{app.client_name}</h3>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--secondary)', marginBottom: '2px' }}>{app.appointment_date} a las {app.appointment_time?.substring(0,5)}</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 500 }}>{app.services?.name}</p>
-                  </div>
-                  <button 
-                    onClick={() => setEditingApp(app)}
-                    style={{ background: '#f1f5f9', border: 'none', padding: '10px', borderRadius: '8px', color: 'var(--text)', cursor: 'pointer' }}
-                  >
-                    <Edit3 size={18} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+
 
       {/* -------------------- TAB CLIENTAS -------------------- */}
       {activeTab === 'clientas' && (
@@ -501,10 +468,7 @@ export default function AdminDashboard({ session, onLogout }) {
           <CalendarIcon size={24} />
           <span style={{ fontSize: '0.75rem', marginTop: '4px', fontWeight: activeTab === 'agenda' ? 600 : 500 }}>Agenda</span>
         </button>
-        <button onClick={() => setActiveTab('citas')} style={{ flex: 1, background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'citas' ? 'var(--primary)' : 'var(--secondary)', cursor: 'pointer', transition: 'color 0.2s' }}>
-          <List size={24} />
-          <span style={{ fontSize: '0.75rem', marginTop: '4px', fontWeight: activeTab === 'citas' ? 600 : 500 }}>Citas</span>
-        </button>
+
         <button onClick={() => setActiveTab('clientas')} style={{ flex: 1, background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'clientas' ? 'var(--primary)' : 'var(--secondary)', cursor: 'pointer', transition: 'color 0.2s' }}>
           <Users size={24} />
           <span style={{ fontSize: '0.75rem', marginTop: '4px', fontWeight: activeTab === 'clientas' ? 600 : 500 }}>Clientas</span>
