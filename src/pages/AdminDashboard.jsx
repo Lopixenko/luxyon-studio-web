@@ -33,14 +33,14 @@ export default function AdminDashboard({ session, onLogout }) {
       
       // If confirming, generate WhatsApp link
       if (newStatus === 'confirmed') {
-        const text = `¡Hola ${app.client_name}! Soy de LuxyOn Studio. Te confirmo tu cita para ${app.services?.name} el día ${app.appointment_date} a las ${app.appointment_time?.substring(0, 5)}. ¡Nos vemos pronto!`;
+        const text = `¡Hola ${app.client_name}! Soy Dunia de LuxyOn Studio. Te confirmo tu cita para ${app.services?.name} el día ${app.appointment_date} a las ${app.appointment_time?.substring(0, 5)}. ¡Nos vemos pronto!`;
         const waLink = `https://wa.me/${app.client_phone.replace(/\+/g, '').replace(/ /g, '')}?text=${encodeURIComponent(text)}`;
         window.open(waLink, '_blank');
       }
       
       // If rejecting, generate WhatsApp link
       if (newStatus === 'cancelled') {
-        const text = `Hola ${app.client_name}, soy de LuxyOn Studio. Siento decirte que no tenemos disponibilidad para tu cita el día ${app.appointment_date}. ¿Te vendría bien otro horario?`;
+        const text = `Hola ${app.client_name}, soy Dunia de LuxyOn Studio. Siento decirte que no tenemos disponibilidad para tu cita el día ${app.appointment_date}. ¿Te vendría bien otro horario?`;
         const waLink = `https://wa.me/${app.client_phone.replace(/\+/g, '').replace(/ /g, '')}?text=${encodeURIComponent(text)}`;
         window.open(waLink, '_blank');
       }
