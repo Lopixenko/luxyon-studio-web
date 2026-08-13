@@ -179,6 +179,7 @@ export default function ClientHome() {
                       <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Hora</label>
                       <input 
                         type="time" required value={appointmentTime} onChange={e => setAppointmentTime(e.target.value)}
+                        min="09:00" max="19:00"
                         style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'inherit' }} 
                       />
                     </div>
