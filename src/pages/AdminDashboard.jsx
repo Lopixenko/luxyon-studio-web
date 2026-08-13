@@ -351,7 +351,7 @@ export default function AdminDashboard({ session, onLogout }) {
                           <>
                             <span style={{ fontWeight: 700, fontSize: '0.75rem', whiteSpace: 'nowrap' }}>{app.appointment_time.substring(0,5)}</span>
                             <span style={{ fontSize: '0.75rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
-                              {app.client_name}
+                              {app.client_name} • {app.services?.name}
                             </span>
                             <button 
                               onClick={(e) => { e.stopPropagation(); notifyClient(app); }}
