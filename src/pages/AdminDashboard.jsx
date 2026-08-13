@@ -384,8 +384,11 @@ export default function AdminDashboard({ session, onLogout }) {
             </div>
             <form onSubmit={handleSaveEditApp} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <p style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '4px', color: 'var(--secondary)' }}>Cliente</p>
-                <p style={{ fontSize: '1rem', fontWeight: 600 }}>{editingApp.client_name} ({editingApp.client_phone})</p>
+                <p style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px', color: 'var(--secondary)' }}>Cliente</p>
+                <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <p style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>{editingApp.client_name}</p>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--secondary)' }}>📞 {editingApp.client_phone}</p>
+                </div>
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Servicio</label>
@@ -400,11 +403,29 @@ export default function AdminDashboard({ session, onLogout }) {
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Fecha</label>
-                  <input type="date" value={editingApp.appointment_date} onChange={e => setEditingApp({...editingApp, appointment_date: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit' }} />
+                  <input 
+                    type="date" 
+                    value={editingApp.appointment_date} 
+                    onChange={e => {
+                      const d = new Date(e.target.value);
+                      if (d.getDay() === 0 || d.getDay() === 6) {
+                        alert("Solo de lunes a viernes.");
+                        return;
+                      }
+                      setEditingApp({...editingApp, appointment_date: e.target.value});
+                    }} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit' }} 
+                  />
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Hora</label>
-                  <input type="time" value={editingApp.appointment_time} onChange={e => setEditingApp({...editingApp, appointment_time: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit' }} />
+                  <input 
+                    type="time" 
+                    value={editingApp.appointment_time} 
+                    min="09:00" max="19:00"
+                    onChange={e => setEditingApp({...editingApp, appointment_time: e.target.value})} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit' }} 
+                  />
                 </div>
               </div>
               <button type="submit" disabled={isSaving} className="btn btn-full" style={{ marginTop: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>

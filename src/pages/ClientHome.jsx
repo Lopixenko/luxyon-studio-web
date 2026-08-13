@@ -13,8 +13,90 @@ export default function ClientHome() {
   const [clientPhone, setClientPhone] = useState('');
   const [appointmentDate, setAppointmentDate] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
+  const [existingAppointments, setExistingAppointments] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+
+  const parseDuration = (str) => {
+    if (!str) return 60;
+    let minutes = 0;
+    const lowerStr = str.toLowerCase();
+    if (lowerStr.includes('h')) {
+      const parts = lowerStr.split('h');
+      minutes += parseInt(parts[0]) * 60;
+      if (parts[1] && parts[1].includes('min')) {
+        minutes += parseInt(parts[1].replace('min', '').trim());
+      }
+    } else if (lowerStr.includes('min')) {
+      minutes += parseInt(lowerStr.replace('min', '').trim());
+    }
+    return isNaN(minutes) || minutes === 0 ? 60 : minutes;
+  }
+
+  const handleDateChange = async (e) => {
+    const val = e.target.value;
+    setAppointmentDate(val);
+    setAppointmentTime('');
+    if (!val) {
+      setExistingAppointments([]);
+      return;
+    }
+
+    const dateObj = new Date(val);
+    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) {
+      alert("Lo sentimos, solo abrimos de Lunes a Viernes.");
+      setAppointmentDate('');
+      setExistingAppointments([]);
+      return;
+    }
+
+    // Fetch existing appointments for this date to calculate availability
+    const { data } = await supabase
+      .from('appointments')
+      .select('*, services(duration)')
+      .eq('appointment_date', val);
+    
+    if (data) setExistingAppointments(data);
+  };
+
+  const generateAvailableSlots = () => {
+    if (!appointmentDate || !selectedService) return [];
+    
+    const reqDuration = parseDuration(selectedService.duration);
+    const slots = [];
+    
+    // De 9:00 a 19:00, con saltos de 15 mins
+    for (let h = 9; h < 19; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        const startMins = h * 60 + m;
+        const endMins = startMins + reqDuration;
+        
+        // No puede terminar más tarde de las 19:00 (19 * 60 = 1140)
+        if (endMins > 1140) continue;
+        
+        let isOverlapping = false;
+        
+        for (const app of existingAppointments) {
+          if (!app.appointment_time) continue;
+          const [appH, appM] = app.appointment_time.split(':');
+          const appStartMins = parseInt(appH) * 60 + parseInt(appM);
+          const appDur = parseDuration(app.services?.duration);
+          const appEndMins = appStartMins + appDur;
+          
+          if (startMins < appEndMins && endMins > appStartMins) {
+            isOverlapping = true;
+            break;
+          }
+        }
+        
+        if (!isOverlapping) {
+          const timeStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+          slots.push(timeStr);
+        }
+      }
+    }
+    return slots;
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -73,7 +155,11 @@ export default function ClientHome() {
     setClientPhone('');
     setAppointmentDate('');
     setAppointmentTime('');
+    setExistingAppointments([]);
   };
+
+  // Obtenemos la fecha de hoy para no dejar reservar días pasados
+  const todayStr = new Date().toISOString().split('T')[0];
 
   return (
     <div className="mobile-container">
@@ -171,17 +257,25 @@ export default function ClientHome() {
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Fecha</label>
                       <input 
-                        type="date" required value={appointmentDate} onChange={e => setAppointmentDate(e.target.value)}
+                        type="date" required value={appointmentDate} onChange={handleDateChange}
+                        min={todayStr}
                         style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'inherit' }} 
                       />
                     </div>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Hora</label>
-                      <input 
-                        type="time" required value={appointmentTime} onChange={e => setAppointmentTime(e.target.value)}
-                        min="09:00" max="19:00"
-                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'inherit' }} 
-                      />
+                      <select 
+                        required 
+                        value={appointmentTime} 
+                        onChange={e => setAppointmentTime(e.target.value)}
+                        disabled={!appointmentDate}
+                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'inherit', backgroundColor: 'white', color: appointmentDate ? 'inherit' : '#94a3b8' }} 
+                      >
+                        <option value="">{appointmentDate ? 'Elige una hora' : 'Elige fecha'}</option>
+                        {generateAvailableSlots().map(slot => (
+                          <option key={slot} value={slot}>{slot}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                   <button type="submit" className="btn btn-full" disabled={isSubmitting} style={{ marginTop: '8px' }}>
