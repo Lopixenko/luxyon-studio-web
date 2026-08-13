@@ -138,7 +138,7 @@ export default function AdminDashboard({ session, onLogout }) {
 
   // --- CONFIGURACIÓN DEL CALENDARIO ---
   const startHour = 9; 
-  const endHour = 19;  
+  const endHour = 18;  
   const pixelsPerHour = 100; // Más altura para poder ver bien los huecos de 15 minutos
 
   // Colores muy pastel con texto oscuro para buen contraste
@@ -262,6 +262,14 @@ export default function AdminDashboard({ session, onLogout }) {
                     </div>
                   )
                 })}
+                {/* Etiqueta de cierre para las 19:00 */}
+                <div style={{ display: 'flex', height: '0px', position: 'relative' }}>
+                  <div style={{ width: '60px', color: 'var(--secondary)', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ position: 'absolute', top: '-12px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
+                      19:00
+                    </div>
+                  </div>
+                </div>
 
                 {appointments.map((app) => {
                   if (!app.appointment_time) return null;
