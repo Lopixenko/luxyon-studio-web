@@ -353,6 +353,13 @@ export default function AdminDashboard({ session, onLogout }) {
                             <span style={{ fontSize: '0.75rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
                               {app.client_name}
                             </span>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); notifyClient(app); }}
+                              title="Notificar por WhatsApp"
+                              style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', flexShrink: 0, padding: 0 }}
+                            >
+                              <MessageCircle size={10} />
+                            </button>
                           </>
                         ) : (
                           // Diseño normal para 30+ minutos
