@@ -244,13 +244,13 @@ export default function AdminDashboard({ session, onLogout }) {
                         <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
                           {hour.toString().padStart(2, '0')}:00
                         </div>
-                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 500, color: 'var(--text)' }}>
+                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
                           {hour.toString().padStart(2, '0')}:15
                         </div>
-                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 500, color: 'var(--text)' }}>
+                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
                           {hour.toString().padStart(2, '0')}:30
                         </div>
-                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 500, color: 'var(--text)' }}>
+                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
                           {hour.toString().padStart(2, '0')}:45
                         </div>
                       </div>
