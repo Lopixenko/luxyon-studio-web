@@ -239,15 +239,25 @@ export default function AdminDashboard({ session, onLogout }) {
                 {Array.from({ length: endHour - startHour + 1 }).map((_, i) => {
                   const hour = startHour + i;
                   return (
-                    <div key={hour} style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', height: `${pixelsPerHour}px` }}>
-                      <div style={{ width: '60px', padding: '8px', color: 'var(--secondary)', fontSize: '0.75rem', fontWeight: 500, borderRight: '1px solid #e2e8f0', textAlign: 'center' }}>
-                        {hour.toString().padStart(2, '0')}:00
+                    <div key={hour} style={{ display: 'flex', height: `${pixelsPerHour}px`, position: 'relative' }}>
+                      <div style={{ width: '60px', color: 'var(--secondary)', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
+                          {hour.toString().padStart(2, '0')}:00
+                        </div>
+                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', opacity: 0.5 }}>
+                          {hour.toString().padStart(2, '0')}:15
+                        </div>
+                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', opacity: 0.5 }}>
+                          {hour.toString().padStart(2, '0')}:30
+                        </div>
+                        <div style={{ height: '25%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', opacity: 0.5 }}>
+                          {hour.toString().padStart(2, '0')}:45
+                        </div>
                       </div>
-                      <div style={{ flex: 1, backgroundColor: '#fafafa', position: 'relative' }}>
-                        {/* Líneas guía de cuartos de hora */}
-                        <div style={{ position: 'absolute', top: '25%', left: 0, right: 0, borderTop: '1px dashed #f1f5f9' }}></div>
-                        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, borderTop: '1px solid #e2e8f0' }}></div>
-                        <div style={{ position: 'absolute', top: '75%', left: 0, right: 0, borderTop: '1px dashed #f1f5f9' }}></div>
+                      <div style={{ flex: 1, backgroundColor: '#fafafa', position: 'relative', borderBottom: '1px solid #e2e8f0' }}>
+                        <div style={{ position: 'absolute', top: '25%', left: 0, right: 0, borderTop: '1px dashed #e2e8f0' }}></div>
+                        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, borderTop: '1px solid #cbd5e1' }}></div>
+                        <div style={{ position: 'absolute', top: '75%', left: 0, right: 0, borderTop: '1px dashed #e2e8f0' }}></div>
                       </div>
                     </div>
                   )
