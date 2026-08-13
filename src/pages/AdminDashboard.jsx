@@ -1,52 +1,36 @@
 import { useState, useEffect } from 'react'
-import { Calendar, List, Settings, LogOut, Check, X, Clock, MessageCircle } from 'lucide-react'
+import { Calendar as CalendarIcon, List, Settings, LogOut, Clock, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '../supabase'
 
 export default function AdminDashboard({ session, onLogout }) {
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  // Format YYYY-MM-DD for the current day
+  const todayStr = new Date().toISOString().split('T')[0]
+  const [selectedDate, setSelectedDate] = useState(todayStr)
 
   const fetchAppointments = async () => {
     setLoading(true)
     const { data } = await supabase
       .from('appointments')
       .select('*, services(name)')
-      .order('appointment_date')
+      .eq('appointment_date', selectedDate)
+      .order('appointment_time')
       
     if (data) setAppointments(data)
     setLoading(false)
   }
 
+  // Fetch whenever the selected date changes
   useEffect(() => {
     fetchAppointments()
-  }, [])
+  }, [selectedDate])
 
-  const updateStatus = async (app, newStatus) => {
-    const { error } = await supabase
-      .from('appointments')
-      .update({ status: newStatus })
-      .eq('id', app.id)
-
-    if (!error) {
-      // Update UI locally
-      setAppointments(appointments.map(a => a.id === app.id ? { ...a, status: newStatus } : a))
-      
-      // If confirming, generate WhatsApp link
-      if (newStatus === 'confirmed') {
-        const text = `¡Hola ${app.client_name}! Soy Dunia de LuxyOn Studio. Te confirmo tu cita para ${app.services?.name} el día ${app.appointment_date} a las ${app.appointment_time?.substring(0, 5)}. ¡Nos vemos pronto!`;
-        const waLink = `https://wa.me/${app.client_phone.replace(/\+/g, '').replace(/ /g, '')}?text=${encodeURIComponent(text)}`;
-        window.open(waLink, '_blank');
-      }
-      
-      // If rejecting, generate WhatsApp link
-      if (newStatus === 'cancelled') {
-        const text = `Hola ${app.client_name}, soy Dunia de LuxyOn Studio. Siento decirte que no tenemos disponibilidad para tu cita el día ${app.appointment_date}. ¿Te vendría bien otro horario?`;
-        const waLink = `https://wa.me/${app.client_phone.replace(/\+/g, '').replace(/ /g, '')}?text=${encodeURIComponent(text)}`;
-        window.open(waLink, '_blank');
-      }
-    } else {
-      alert("Error al actualizar la cita. Asegúrate de haber ejecutado el comando SQL de actualización.");
-    }
+  const notifyClient = (app) => {
+    const text = `¡Hola ${app.client_name}! Soy de LuxyOn Studio. Te escribo para confirmar tu cita para ${app.services?.name} el día ${app.appointment_date} a las ${app.appointment_time?.substring(0, 5)}. ¡Nos vemos pronto!`;
+    const waLink = `https://wa.me/${app.client_phone.replace(/\+/g, '').replace(/ /g, '')}?text=${encodeURIComponent(text)}`;
+    window.open(waLink, '_blank');
   }
 
   const handleLogout = async () => {
@@ -54,43 +38,68 @@ export default function AdminDashboard({ session, onLogout }) {
     onLogout()
   }
 
-  // Filtrar para no mostrar las canceladas en la lista principal (opcional)
-  const activeAppointments = appointments.filter(a => a.status !== 'cancelled')
+  // Navigate dates left and right
+  const changeDate = (days) => {
+    const d = new Date(selectedDate)
+    d.setDate(d.getDate() + days)
+    setSelectedDate(d.toISOString().split('T')[0])
+  }
+
+  // Human readable date string for display
+  const dateObj = new Date(selectedDate)
+  const displayDate = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
     <div className="mobile-container" style={{ paddingBottom: '80px', backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
       <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', backgroundColor: 'var(--surface)' }}>
-        <h1 style={{ fontSize: '1.25rem', color: 'var(--primary)', fontWeight: 600 }}>Mi Agenda</h1>
+        <h1 style={{ fontSize: '1.25rem', color: 'var(--primary)', fontWeight: 600 }}>Agenda</h1>
         <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'var(--secondary)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
           <LogOut size={18} />
           <span style={{ fontSize: '0.875rem' }}>Salir</span>
         </button>
       </header>
 
+      {/* Date Navigator (Mini Calendar) */}
+      <div style={{ backgroundColor: 'white', padding: '16px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <button onClick={() => changeDate(-1)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--primary)' }}>
+          <ChevronLeft size={24} />
+        </button>
+        <div style={{ textAlign: 'center' }}>
+          <input 
+            type="date" 
+            value={selectedDate} 
+            onChange={(e) => setSelectedDate(e.target.value)}
+            style={{ border: 'none', background: 'transparent', fontWeight: 600, fontSize: '1rem', color: 'var(--text)', outline: 'none', textAlign: 'center', cursor: 'pointer' }} 
+          />
+          <p style={{ fontSize: '0.75rem', color: 'var(--secondary)', textTransform: 'capitalize', marginTop: '2px' }}>{displayDate}</p>
+        </div>
+        <button onClick={() => changeDate(1)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--primary)' }}>
+          <ChevronRight size={24} />
+        </button>
+      </div>
+
       <div style={{ padding: '24px' }}>
-        <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '16px', color: 'var(--text)' }}>Citas</h2>
-        
         {loading ? (
-          <p style={{ textAlign: 'center', color: 'var(--secondary)' }}>Cargando citas...</p>
-        ) : activeAppointments.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--secondary)' }}>
-            <Calendar size={48} style={{ opacity: 0.2, margin: '0 auto 16px' }} />
-            <p>No tienes citas hoy.</p>
+          <p style={{ textAlign: 'center', color: 'var(--secondary)' }}>Cargando agenda...</p>
+        ) : appointments.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--secondary)' }}>
+            <CalendarIcon size={48} style={{ opacity: 0.2, margin: '0 auto 16px' }} />
+            <p>No tienes citas programadas este día.</p>
           </div>
         ) : (
-          activeAppointments.map(app => (
+          appointments.map(app => (
             <div key={app.id} style={{ 
               backgroundColor: 'white', 
               padding: '16px', 
               borderRadius: '12px', 
               marginBottom: '12px', 
-              border: app.status === 'pending' ? '2px solid #fbbf24' : '1px solid var(--border)',
+              border: '1px solid var(--border)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.02)' 
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
                 <span style={{ fontWeight: 600, fontSize: '1.1rem' }}>{app.client_name}</span>
-                <span style={{ backgroundColor: 'var(--primary)', color: 'white', padding: '4px 8px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>
-                  {app.appointment_date} | {app.appointment_time?.substring(0, 5)}
+                <span style={{ backgroundColor: 'var(--primary)', color: 'white', padding: '4px 8px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Clock size={12} /> {app.appointment_time?.substring(0, 5)}
                 </span>
               </div>
               <p style={{ fontSize: '0.875rem', color: 'var(--secondary)', marginBottom: '8px', fontWeight: 500 }}>
@@ -102,26 +111,12 @@ export default function AdminDashboard({ session, onLogout }) {
                   <MessageCircle size={14} /> {app.client_phone}
                 </span>
                 
-                {app.status === 'pending' ? (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button 
-                      onClick={() => updateStatus(app, 'cancelled')}
-                      style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                    >
-                      <X size={14} /> Rechazar
-                    </button>
-                    <button 
-                      onClick={() => updateStatus(app, 'confirmed')}
-                      style={{ background: '#dcfce7', color: '#22c55e', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                    >
-                      <Check size={14} /> Confirmar
-                    </button>
-                  </div>
-                ) : (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#22c55e', fontWeight: 600 }}>
-                    <Check size={14} /> Confirmada
-                  </span>
-                )}
+                <button 
+                  onClick={() => notifyClient(app)}
+                  style={{ background: '#dcfce7', color: '#16a34a', border: '1px solid #bbf7d0', padding: '6px 12px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <MessageCircle size={14} /> Notificar
+                </button>
               </div>
             </div>
           ))
@@ -131,8 +126,8 @@ export default function AdminDashboard({ session, onLogout }) {
       {/* Bottom Tab Bar */}
       <div style={{ position: 'fixed', bottom: 0, width: '100%', maxWidth: '480px', display: 'flex', justifyContent: 'space-around', padding: '16px', backgroundColor: 'white', borderTop: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'var(--primary)' }}>
-          <Calendar size={24} />
-          <span style={{ fontSize: '0.75rem', marginTop: '4px', fontWeight: 500 }}>Citas</span>
+          <CalendarIcon size={24} />
+          <span style={{ fontSize: '0.75rem', marginTop: '4px', fontWeight: 500 }}>Agenda</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'var(--secondary)' }}>
           <List size={24} />

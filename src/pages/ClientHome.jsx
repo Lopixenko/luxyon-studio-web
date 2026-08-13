@@ -135,8 +135,8 @@ export default function ClientHome() {
             {bookingSuccess ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <CheckCircle size={48} color="var(--primary)" style={{ margin: '0 auto 16px' }} />
-                <h2 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>¡Solicitud Recibida!</h2>
-                <p style={{ color: 'var(--secondary)' }}>Tu cita para el {appointmentDate} está <strong>pendiente de confirmar</strong>. Te avisaremos muy pronto.</p>
+                <h2 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>¡Cita Confirmada!</h2>
+                <p style={{ color: 'var(--secondary)' }}>Te esperamos el día {appointmentDate}.</p>
               </div>
             ) : (
               <>
