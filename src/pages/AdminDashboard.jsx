@@ -156,15 +156,15 @@ export default function AdminDashboard({ session, onLogout }) {
     if (!str) return 60;
     let minutes = 0;
     const lowerStr = str.toLowerCase();
-    if (lowerStr.includes('h')) {
-      const parts = lowerStr.split('h');
-      minutes += parseInt(parts[0]) * 60;
-      if (parts[1] && parts[1].includes('min')) {
-        minutes += parseInt(parts[1].replace('min', '').trim());
-      }
-    } else if (lowerStr.includes('min')) {
-      minutes += parseInt(lowerStr.replace('min', '').trim());
-    }
+    
+    // Extraer horas (ej: "1h", "1 h", "2horas")
+    const hMatch = lowerStr.match(/(\d+)\s*h/);
+    if (hMatch) minutes += parseInt(hMatch[1]) * 60;
+    
+    // Extraer minutos (ej: "30m", "15 mins", "45 minutos")
+    const mMatch = lowerStr.match(/(\d+)\s*m/);
+    if (mMatch) minutes += parseInt(mMatch[1]);
+    
     return isNaN(minutes) || minutes === 0 ? 60 : minutes;
   }
 
