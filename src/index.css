@@ -218,3 +218,14 @@ body {
   cursor: pointer;
   color: var(--secondary);
 }
+
+
+/* Custom Calendar Styles */
+.custom-calendar { width: 100% !important; border: none !important; font-family: inherit !important; }
+.custom-calendar abbr { text-decoration: none; }
+.custom-calendar .react-calendar__navigation button { font-size: 1.1rem; font-weight: 600; color: var(--text); border-radius: 8px; }
+.custom-calendar .react-calendar__navigation button:hover { background-color: var(--background); }
+.custom-calendar .react-calendar__tile { padding: 10px 6px; font-size: 1rem; border-radius: 8px; }
+.custom-calendar .react-calendar__tile--active { background-color: var(--primary) !important; color: white !important; font-weight: 600; border-radius: 8px; }
+.custom-calendar .react-calendar__tile:hover { background-color: var(--border); }
+.custom-calendar .react-calendar__tile--now { background-color: var(--surface); color: var(--primary); font-weight: 600; border: 1px solid var(--primary); }

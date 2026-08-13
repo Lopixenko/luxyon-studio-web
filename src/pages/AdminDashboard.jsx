@@ -1,28 +1,36 @@
 import { useState, useEffect } from 'react'
-import { Calendar as CalendarIcon, List, Settings, LogOut, Clock, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Calendar as CalendarIcon, List, Settings, LogOut, Clock, MessageCircle } from 'lucide-react'
+import Calendar from 'react-calendar'
+import 'react-calendar/dist/Calendar.css'
 import { supabase } from '../supabase'
 
 export default function AdminDashboard({ session, onLogout }) {
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
   
-  // Format YYYY-MM-DD for the current day
-  const todayStr = new Date().toISOString().split('T')[0]
-  const [selectedDate, setSelectedDate] = useState(todayStr)
+  const [selectedDate, setSelectedDate] = useState(new Date())
+
+  // Fix timezone issue when selecting dates
+  const getDateString = (d) => {
+    const offset = d.getTimezoneOffset()
+    const safeDate = new Date(d.getTime() - (offset*60*1000))
+    return safeDate.toISOString().split('T')[0]
+  }
 
   const fetchAppointments = async () => {
     setLoading(true)
+    const dateStr = getDateString(selectedDate)
+    
     const { data } = await supabase
       .from('appointments')
       .select('*, services(name)')
-      .eq('appointment_date', selectedDate)
+      .eq('appointment_date', dateStr)
       .order('appointment_time')
       
     if (data) setAppointments(data)
     setLoading(false)
   }
 
-  // Fetch whenever the selected date changes
   useEffect(() => {
     fetchAppointments()
   }, [selectedDate])
@@ -38,17 +46,6 @@ export default function AdminDashboard({ session, onLogout }) {
     onLogout()
   }
 
-  // Navigate dates left and right
-  const changeDate = (days) => {
-    const d = new Date(selectedDate)
-    d.setDate(d.getDate() + days)
-    setSelectedDate(d.toISOString().split('T')[0])
-  }
-
-  // Human readable date string for display
-  const dateObj = new Date(selectedDate)
-  const displayDate = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
-
   return (
     <div className="mobile-container" style={{ paddingBottom: '80px', backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
       <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', backgroundColor: 'var(--surface)' }}>
@@ -59,30 +56,25 @@ export default function AdminDashboard({ session, onLogout }) {
         </button>
       </header>
 
-      {/* Date Navigator (Mini Calendar) */}
-      <div style={{ backgroundColor: 'white', padding: '16px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button onClick={() => changeDate(-1)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--primary)' }}>
-          <ChevronLeft size={24} />
-        </button>
-        <div style={{ textAlign: 'center' }}>
-          <input 
-            type="date" 
-            value={selectedDate} 
-            onChange={(e) => setSelectedDate(e.target.value)}
-            style={{ border: 'none', background: 'transparent', fontWeight: 600, fontSize: '1rem', color: 'var(--text)', outline: 'none', textAlign: 'center', cursor: 'pointer' }} 
-          />
-          <p style={{ fontSize: '0.75rem', color: 'var(--secondary)', textTransform: 'capitalize', marginTop: '2px' }}>{displayDate}</p>
-        </div>
-        <button onClick={() => changeDate(1)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--primary)' }}>
-          <ChevronRight size={24} />
-        </button>
+      {/* Full Month Calendar */}
+      <div style={{ backgroundColor: 'white', padding: '16px', borderBottom: '1px solid var(--border)' }}>
+        <Calendar 
+          onChange={setSelectedDate} 
+          value={selectedDate} 
+          locale="es-ES"
+          className="custom-calendar"
+        />
       </div>
 
       <div style={{ padding: '24px' }}>
+        <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '16px', color: 'var(--text)', textTransform: 'capitalize' }}>
+          Citas del {selectedDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
+        </h2>
+        
         {loading ? (
           <p style={{ textAlign: 'center', color: 'var(--secondary)' }}>Cargando agenda...</p>
         ) : appointments.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--secondary)' }}>
+          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--secondary)' }}>
             <CalendarIcon size={48} style={{ opacity: 0.2, margin: '0 auto 16px' }} />
             <p>No tienes citas programadas este día.</p>
           </div>
