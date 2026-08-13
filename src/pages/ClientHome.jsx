@@ -10,6 +10,7 @@ export default function ClientHome() {
   
   // Booking Form State
   const [clientName, setClientName] = useState('');
+  const [clientLastName, setClientLastName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [appointmentDate, setAppointmentDate] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
@@ -111,16 +112,18 @@ export default function ClientHome() {
 
   const handleBooking = async (e) => {
     e.preventDefault();
-    if (!clientName || !clientPhone || !appointmentDate || !appointmentTime) {
+    if (!clientName || !clientLastName || !clientPhone || !appointmentDate || !appointmentTime) {
       alert("Por favor, rellena todos los campos.");
       return;
     }
     
     setIsSubmitting(true);
     
+    const fullName = `${clientName} ${clientLastName}`;
+    
     // 1. Guardar o actualizar la Clienta en el nuevo CRM (usando el teléfono como ID único)
     await supabase.from('clients').upsert({
-      name: clientName,
+      name: fullName,
       phone: clientPhone
     }, { onConflict: 'phone' });
 
@@ -128,7 +131,7 @@ export default function ClientHome() {
     const { error } = await supabase.from('appointments').insert([
       {
         service_id: selectedService.id,
-        client_name: clientName,
+        client_name: fullName,
         client_phone: clientPhone,
         appointment_date: appointmentDate,
         appointment_time: appointmentTime
@@ -152,6 +155,7 @@ export default function ClientHome() {
     setSelectedService(null);
     setBookingSuccess(false);
     setClientName('');
+    setClientLastName('');
     setClientPhone('');
     setAppointmentDate('');
     setAppointmentTime('');
@@ -240,43 +244,48 @@ export default function ClientHome() {
                 
                 <form onSubmit={handleBooking} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div>
-                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Tu Nombre</label>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Nombre</label>
                     <input 
                       type="text" required value={clientName} onChange={e => setClientName(e.target.value)}
                       style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }} 
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Tu Teléfono (WhatsApp)</label>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Apellidos</label>
+                    <input 
+                      type="text" required value={clientLastName} onChange={e => setClientLastName(e.target.value)}
+                      style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }} 
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Teléfono</label>
                     <input 
                       type="tel" required value={clientPhone} onChange={e => setClientPhone(e.target.value)}
                       style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }} 
                     />
                   </div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Fecha</label>
-                      <input 
-                        type="date" required value={appointmentDate} onChange={handleDateChange}
-                        min={todayStr}
-                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'inherit' }} 
-                      />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Hora</label>
-                      <select 
-                        required 
-                        value={appointmentTime} 
-                        onChange={e => setAppointmentTime(e.target.value)}
-                        disabled={!appointmentDate}
-                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'inherit', backgroundColor: 'white', color: appointmentDate ? 'inherit' : '#94a3b8' }} 
-                      >
-                        <option value="">{appointmentDate ? 'Elige una hora' : 'Elige fecha'}</option>
-                        {generateAvailableSlots().map(slot => (
-                          <option key={slot} value={slot}>{slot}</option>
-                        ))}
-                      </select>
-                    </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Fecha</label>
+                    <input 
+                      type="date" required value={appointmentDate} onChange={handleDateChange}
+                      min={todayStr}
+                      style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'inherit' }} 
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Hora</label>
+                    <select 
+                      required 
+                      value={appointmentTime} 
+                      onChange={e => setAppointmentTime(e.target.value)}
+                      disabled={!appointmentDate}
+                      style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'inherit', backgroundColor: 'white', color: appointmentDate ? 'inherit' : '#94a3b8' }} 
+                    >
+                      <option value="">{appointmentDate ? 'Elige una hora' : 'Elige fecha'}</option>
+                      {generateAvailableSlots().map(slot => (
+                        <option key={slot} value={slot}>{slot}</option>
+                      ))}
+                    </select>
                   </div>
                   <button type="submit" className="btn btn-full" disabled={isSubmitting} style={{ marginTop: '8px' }}>
                     {isSubmitting ? 'Confirmando...' : 'Confirmar Reserva'}
