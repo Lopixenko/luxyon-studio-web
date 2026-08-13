@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Star, MapPin, X } from 'lucide-react'
+import { Star, MapPin, X, CheckCircle } from 'lucide-react'
 import { supabase } from '../supabase'
 import '../index.css'
 
@@ -7,6 +7,14 @@ export default function ClientHome() {
   const [selectedService, setSelectedService] = useState(null);
   const [services, setServices] = useState([]);
   const [reviews, setReviews] = useState([]);
+  
+  // Booking Form State
+  const [clientName, setClientName] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [appointmentDate, setAppointmentDate] = useState('');
+  const [appointmentTime, setAppointmentTime] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -18,6 +26,47 @@ export default function ClientHome() {
     }
     fetchData();
   }, []);
+
+  const handleBooking = async (e) => {
+    e.preventDefault();
+    if (!clientName || !clientPhone || !appointmentDate || !appointmentTime) {
+      alert("Por favor, rellena todos los campos.");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    const { error } = await supabase.from('appointments').insert([
+      {
+        service_id: selectedService.id,
+        client_name: clientName,
+        client_phone: clientPhone,
+        appointment_date: appointmentDate,
+        appointment_time: appointmentTime
+      }
+    ]);
+
+    setIsSubmitting(false);
+
+    if (error) {
+      console.error(error);
+      alert("Hubo un error al guardar la cita.");
+    } else {
+      setBookingSuccess(true);
+      setTimeout(() => {
+        closeBookingModal();
+      }, 3000);
+    }
+  };
+
+  const closeBookingModal = () => {
+    setSelectedService(null);
+    setBookingSuccess(false);
+    setClientName('');
+    setClientPhone('');
+    setAppointmentDate('');
+    setAppointmentTime('');
+  };
 
   return (
     <div className="mobile-container">
@@ -75,34 +124,64 @@ export default function ClientHome() {
         </button>
       </section>
 
-      {/* Mock Booking Modal */}
+      {/* Booking Modal */}
       {selectedService && (
-        <div className="booking-modal-overlay" onClick={() => setSelectedService(null)}>
+        <div className="booking-modal-overlay" onClick={closeBookingModal}>
           <div className="booking-modal" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedService(null)}>
+            <button className="modal-close" onClick={closeBookingModal}>
               <X size={24} />
             </button>
-            <h2 style={{fontSize: '1.25rem', marginBottom: '8px'}}>Reservar cita</h2>
-            <h3 style={{fontWeight: 500, marginBottom: '24px', color: 'var(--secondary)'}}>
-              {selectedService.name} • {selectedService.price}
-            </h3>
             
-            <p style={{marginBottom: '16px', fontSize: '0.875rem', color: 'var(--primary)'}}>Elige una fecha:</p>
-            
-            <div style={{display:'flex', gap:'8px', overflowX:'auto', marginBottom: '24px', paddingBottom:'8px'}}>
-              {['Lun 14', 'Mar 15', 'Mié 16', 'Jue 17', 'Vie 18'].map(day => (
-                <div key={day} style={{padding: '12px 16px', border: '1px solid var(--border)', borderRadius: '8px', minWidth: '80px', textAlign: 'center', cursor: 'pointer', fontSize: '0.875rem'}}>
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            <button className="btn btn-full" onClick={() => {
-              alert('En la versión real, esto guardará la cita en la base de datos y notificará a la app del iPhone.')
-              setSelectedService(null)
-            }}>
-              Confirmar Reserva
-            </button>
+            {bookingSuccess ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <CheckCircle size={48} color="var(--primary)" style={{ margin: '0 auto 16px' }} />
+                <h2 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>¡Cita Confirmada!</h2>
+                <p style={{ color: 'var(--secondary)' }}>Te esperamos el día {appointmentDate}.</p>
+              </div>
+            ) : (
+              <>
+                <h2 style={{fontSize: '1.25rem', marginBottom: '8px'}}>Reservar cita</h2>
+                <h3 style={{fontWeight: 500, marginBottom: '24px', color: 'var(--secondary)'}}>
+                  {selectedService.name} • {selectedService.price}
+                </h3>
+                
+                <form onSubmit={handleBooking} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Tu Nombre</label>
+                    <input 
+                      type="text" required value={clientName} onChange={e => setClientName(e.target.value)}
+                      style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }} 
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Tu Teléfono (WhatsApp)</label>
+                    <input 
+                      type="tel" required value={clientPhone} onChange={e => setClientPhone(e.target.value)}
+                      style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }} 
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Fecha</label>
+                      <input 
+                        type="date" required value={appointmentDate} onChange={e => setAppointmentDate(e.target.value)}
+                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'inherit' }} 
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Hora</label>
+                      <input 
+                        type="time" required value={appointmentTime} onChange={e => setAppointmentTime(e.target.value)}
+                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'inherit' }} 
+                      />
+                    </div>
+                  </div>
+                  <button type="submit" className="btn btn-full" disabled={isSubmitting} style={{ marginTop: '8px' }}>
+                    {isSubmitting ? 'Confirmando...' : 'Confirmar Reserva'}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
