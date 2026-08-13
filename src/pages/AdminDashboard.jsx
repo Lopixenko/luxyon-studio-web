@@ -72,6 +72,46 @@ export default function AdminDashboard({ session, onLogout }) {
     e.preventDefault()
     setIsSaving(true)
     
+    // Check overlaps
+    const { data: dateApps } = await supabase
+      .from('appointments')
+      .select('*, services(duration)')
+      .eq('appointment_date', editingApp.appointment_date)
+      .neq('id', editingApp.id);
+
+    const reqSrv = allServices.find(s => s.id === editingApp.service_id);
+    const reqDur = parseDuration(reqSrv?.duration);
+    
+    const [h, m] = editingApp.appointment_time.split(':');
+    const startMins = parseInt(h) * 60 + parseInt(m);
+    const endMins = startMins + reqDur;
+
+    if (startMins < 9 * 60 || endMins > 19 * 60) {
+      alert("La cita (incluyendo su duración) debe estar dentro del horario de 09:00 a 19:00.");
+      setIsSaving(false);
+      return;
+    }
+
+    let isOverlapping = false;
+    for (const app of dateApps || []) {
+      if (!app.appointment_time) continue;
+      const [appH, appM] = app.appointment_time.split(':');
+      const appStartMins = parseInt(appH) * 60 + parseInt(appM);
+      const appDur = parseDuration(app.services?.duration);
+      const appEndMins = appStartMins + appDur;
+      
+      if (startMins < appEndMins && endMins > appStartMins) {
+        isOverlapping = true;
+        break;
+      }
+    }
+
+    if (isOverlapping) {
+      alert("¡Ojo! El horario seleccionado se solapa con otra cita existente en ese día.");
+      setIsSaving(false);
+      return;
+    }
+    
     const { error } = await supabase
       .from('appointments')
       .update({
