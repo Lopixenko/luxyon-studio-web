@@ -49,7 +49,7 @@ export default function App() {
       <section className="section">
         <div className="section-title">
           <h2>Reseñas</h2>
-          <span style={{fontSize: '0.875rem', fontWeight: 500}}>4.9 <Star size={14} fill="#171717" style={{verticalAlign: 'text-bottom'}} /> (120)</span>
+          <span style={{fontSize: '0.875rem', fontWeight: 500}}>4.9 <Star size={14} fill="var(--primary)" color="var(--primary)" style={{verticalAlign: 'text-bottom'}} /> (120)</span>
         </div>
         <div className="reviews-list">
           {reviews.map(review => (
@@ -58,7 +58,7 @@ export default function App() {
                 <span className="review-name">{review.name}</span>
                 <div className="review-stars">
                   {[...Array(review.stars)].map((_, i) => (
-                    <Star key={i} size={14} fill="#171717" strokeWidth={0} />
+                    <Star key={i} size={14} fill="var(--primary)" color="var(--primary)" strokeWidth={0} />
                   ))}
                 </div>
               </div>
