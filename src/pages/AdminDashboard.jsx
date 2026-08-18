@@ -634,37 +634,41 @@ export default function AdminDashboard({ session, onLogout }) {
                       </div>
                     </div>
 
-                    <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '16px', color: 'var(--text)' }}>Citas del Día</h3>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '16px', color: 'var(--text)' }}>Citas del Mes</h3>
                     
-                    {dayApps.length === 0 ? (
-                      <p style={{ textAlign: 'center', color: 'var(--secondary)', fontStyle: 'italic', padding: '20px 0' }}>No hay citas registradas hoy.</p>
+                    {accAppointments.length === 0 ? (
+                      <p style={{ textAlign: 'center', color: 'var(--secondary)', fontStyle: 'italic', padding: '20px 0' }}>No hay citas registradas este mes.</p>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {dayApps.map(app => (
-                          <div key={app.id} style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                              <h4 style={{ fontWeight: 600 }}>{app.client_name}</h4>
-                              <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{getAppPrice(app)}€</span>
+                        {accAppointments.map(app => {
+                          const dateObj = new Date(app.appointment_date);
+                          const dateDisplay = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+                          return (
+                            <div key={app.id} style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <h4 style={{ fontWeight: 600 }}>{app.client_name}</h4>
+                                <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{getAppPrice(app)}€</span>
+                              </div>
+                              <p style={{ fontSize: '0.875rem', color: 'var(--secondary)', marginBottom: '16px' }}>
+                                <CalendarIcon size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }}/> 
+                                {dateDisplay} a las {app.appointment_time?.substring(0,5)} • {getAppNames(app)}
+                              </p>
+                              
+                              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--secondary)' }}>Método de pago:</span>
+                                <select 
+                                  value={app.payment_method || ''}
+                                  onChange={(e) => updatePaymentMethod(app.id, e.target.value)}
+                                  style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem', outline: 'none', backgroundColor: app.payment_method ? '#f8fafc' : 'white', fontWeight: 500 }}
+                                >
+                                  <option value="">Pendiente...</option>
+                                  <option value="efectivo">Efectivo 💵</option>
+                                  <option value="tarjeta">Tarjeta 💳</option>
+                                </select>
+                              </div>
                             </div>
-                            <p style={{ fontSize: '0.875rem', color: 'var(--secondary)', marginBottom: '16px' }}>
-                              <Clock size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }}/> 
-                              {app.appointment_time?.substring(0,5)} • {getAppNames(app)}
-                            </p>
-                            
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                              <span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--secondary)' }}>Método de pago:</span>
-                              <select 
-                                value={app.payment_method || ''}
-                                onChange={(e) => updatePaymentMethod(app.id, e.target.value)}
-                                style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem', outline: 'none', backgroundColor: app.payment_method ? '#f8fafc' : 'white', fontWeight: 500 }}
-                              >
-                                <option value="">Pendiente...</option>
-                                <option value="efectivo">Efectivo 💵</option>
-                                <option value="tarjeta">Tarjeta 💳</option>
-                              </select>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </>
