@@ -34,10 +34,14 @@ export default function ClientHome() {
     return isNaN(minutes) || minutes === 0 ? 60 : minutes;
   }
 
+  const [dateError, setDateError] = useState('');
+
   const handleDateChange = async (e) => {
     const val = e.target.value;
+    setDateError('');
     setAppointmentDate(val);
     setAppointmentTime('');
+    
     if (!val) {
       setExistingAppointments([]);
       return;
@@ -45,7 +49,7 @@ export default function ClientHome() {
 
     const dateObj = new Date(val);
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) {
-      alert("Lo sentimos, solo abrimos de Lunes a Viernes.");
+      setDateError("Solo abrimos de Lunes a Viernes.");
       setAppointmentDate('');
       setExistingAppointments([]);
       return;
@@ -70,6 +74,10 @@ export default function ClientHome() {
     for (let h = 9; h < 19; h++) {
       for (let m = 0; m < 60; m += 15) {
         const startMins = h * 60 + m;
+        
+        // Limitar última hora de reserva a las 17:30 (17 * 60 + 30 = 1050)
+        if (startMins > 1050) continue;
+        
         const endMins = startMins + reqDuration;
         
         // No puede terminar más tarde de las 19:00 (19 * 60 = 1140)
@@ -269,8 +277,9 @@ export default function ClientHome() {
                     <input 
                       type="date" required value={appointmentDate} onChange={handleDateChange}
                       min={todayStr}
-                      style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', fontFamily: 'inherit' }} 
+                      style={{ width: '100%', padding: '12px', borderRadius: '8px', border: dateError ? '1px solid #ef4444' : '1px solid var(--border)', fontFamily: 'inherit' }} 
                     />
+                    {dateError && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>{dateError}</span>}
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem' }}>Hora</label>
