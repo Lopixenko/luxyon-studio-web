@@ -23,6 +23,10 @@ export default function ClientHome() {
     let minutes = 0;
     const lowerStr = str.toLowerCase();
     
+    if (lowerStr.includes('0m') || lowerStr.includes('0 m') || lowerStr.includes('sin tiempo')) {
+      return 0;
+    }
+    
     // Extraer horas (ej: "1h", "1 h", "2horas")
     const hMatch = lowerStr.match(/(\d+)\s*h/);
     if (hMatch) minutes += parseInt(hMatch[1]) * 60;
@@ -86,13 +90,14 @@ export default function ClientHome() {
           const [appH, appM] = app.appointment_time.split(':');
           const appStartMins = parseInt(appH) * 60 + parseInt(appM);
           
-          let appDur = 0;
+          let appDurRaw = 0;
           if (app.services_json && app.services_json.length > 0) {
-            appDur = app.services_json.reduce((acc, curr) => acc + parseDuration(curr.duration), 0);
+            appDurRaw = app.services_json.reduce((acc, curr) => acc + parseDuration(curr.duration), 0);
           } else {
-            appDur = parseDuration(app.services?.duration);
+            appDurRaw = parseDuration(app.services?.duration);
           }
           
+          const appDur = Math.max(15, appDurRaw);
           const appEndMins = appStartMins + appDur;
           
           if (startMins < appEndMins && endMins > appStartMins) {
@@ -137,7 +142,8 @@ export default function ClientHome() {
     return isNaN(num) ? 0 : num;
   };
 
-  const totalDuration = selectedServices.reduce((acc, curr) => acc + parseDuration(curr.duration), 0);
+  const totalDurationRaw = selectedServices.reduce((acc, curr) => acc + parseDuration(curr.duration), 0);
+  const totalDuration = Math.max(15, totalDurationRaw);
   const totalPrice = selectedServices.reduce((acc, curr) => acc + parsePrice(curr.price), 0);
 
   const handleBooking = async (e) => {

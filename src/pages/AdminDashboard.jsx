@@ -162,6 +162,10 @@ export default function AdminDashboard({ session, onLogout }) {
     let minutes = 0;
     const lowerStr = str.toLowerCase();
     
+    if (lowerStr.includes('0m') || lowerStr.includes('0 m') || lowerStr.includes('sin tiempo')) {
+      return 0;
+    }
+    
     // Extraer horas (ej: "1h", "1 h", "2horas")
     const hMatch = lowerStr.match(/(\d+)\s*h/);
     if (hMatch) minutes += parseInt(hMatch[1]) * 60;
@@ -174,10 +178,13 @@ export default function AdminDashboard({ session, onLogout }) {
   }
 
   const getAppDuration = (app) => {
+    let dur = 0;
     if (app.services_json && app.services_json.length > 0) {
-      return app.services_json.reduce((sum, s) => sum + parseDuration(s.duration), 0);
+      dur = app.services_json.reduce((sum, s) => sum + parseDuration(s.duration), 0);
+    } else {
+      dur = parseDuration(app.services?.duration);
     }
-    return parseDuration(app.services?.duration);
+    return Math.max(15, dur); // Mínimo 15 mins para que se renderice la tarjeta en la agenda
   }
 
   const getAppNames = (app) => {
