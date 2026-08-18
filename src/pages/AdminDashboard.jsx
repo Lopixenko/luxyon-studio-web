@@ -466,8 +466,8 @@ export default function AdminDashboard({ session, onLogout }) {
 
       {/* -------------------- MODAL DE EDICIÓN CITAS -------------------- */}
       {editingApp && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ backgroundColor: 'white', width: '100%', maxWidth: '400px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', boxSizing: 'border-box' }}>
+          <div style={{ backgroundColor: 'white', width: '100%', maxWidth: '400px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--border)', backgroundColor: '#fafafa' }}>
               <h3 style={{ fontWeight: 600, fontSize: '1.1rem' }}>Editar Cita</h3>
               <button onClick={() => setEditingApp(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--secondary)' }}>
@@ -534,7 +534,7 @@ export default function AdminDashboard({ session, onLogout }) {
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div>
+                <div style={{ width: '100%' }}>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Fecha</label>
                   <input 
                     type="date" 
@@ -547,17 +547,17 @@ export default function AdminDashboard({ session, onLogout }) {
                       }
                       setEditingApp({...editingApp, appointment_date: e.target.value});
                     }} 
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: '#f8fafc', color: 'var(--text)', boxSizing: 'border-box' }} 
+                    style={{ width: '100%', minWidth: 0, WebkitAppearance: 'none', appearance: 'none', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: '#f8fafc', color: 'var(--text)', boxSizing: 'border-box' }} 
                   />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ width: '100%' }}>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Hora</label>
                   <input 
                     type="time" 
                     value={editingApp.appointment_time} 
                     min="09:00" max="19:00"
                     onChange={e => setEditingApp({...editingApp, appointment_time: e.target.value})} 
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: '#f8fafc', color: 'var(--text)', boxSizing: 'border-box' }} 
+                    style={{ width: '100%', minWidth: 0, WebkitAppearance: 'none', appearance: 'none', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: '#f8fafc', color: 'var(--text)', boxSizing: 'border-box' }} 
                   />
                 </div>
               </div>
@@ -571,8 +571,8 @@ export default function AdminDashboard({ session, onLogout }) {
 
       {/* -------------------- MODAL DE EDICIÓN CLIENTAS -------------------- */}
       {editingClient && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div style={{ backgroundColor: 'white', width: '100%', maxWidth: '400px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', boxSizing: 'border-box' }}>
+          <div style={{ backgroundColor: 'white', width: '100%', maxWidth: '400px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--border)', backgroundColor: '#fafafa' }}>
               <h3 style={{ fontWeight: 600, fontSize: '1.1rem' }}>Editar Clienta</h3>
               <button onClick={() => setEditingClient(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--secondary)' }}>
