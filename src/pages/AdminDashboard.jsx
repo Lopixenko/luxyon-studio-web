@@ -474,7 +474,7 @@ export default function AdminDashboard({ session, onLogout }) {
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSaveEditApp} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleSaveEditApp} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Nombre y Apellidos</label>
