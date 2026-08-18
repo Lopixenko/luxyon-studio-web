@@ -492,31 +492,45 @@ export default function AdminDashboard({ session, onLogout }) {
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Servicios</label>
                 <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '8px', padding: '4px', backgroundColor: 'white' }}>
-                  {allServices.map(srv => {
-                    const isSelected = editingApp.services_json 
-                      ? editingApp.services_json.some(s => s.id === srv.id) 
-                      : editingApp.service_id === srv.id;
-                      
-                    return (
-                      <label key={srv.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 8px', gap: '12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={isSelected}
-                          onChange={(e) => {
-                            let newServices = editingApp.services_json || (editingApp.service_id ? [allServices.find(s => s.id === editingApp.service_id)] : []);
-                            if (e.target.checked) {
-                              newServices = [...newServices, srv];
-                            } else {
-                              newServices = newServices.filter(s => s.id !== srv.id);
-                            }
-                            setEditingApp({...editingApp, services_json: newServices, service_id: newServices[0]?.id || null});
-                          }}
-                          style={{ width: '16px', height: '16px' }}
-                        />
-                        <span style={{ fontSize: '0.875rem' }}>{srv.name} ({srv.price})</span>
-                      </label>
-                    );
-                  })}
+                  {Object.entries(
+                    allServices.reduce((acc, srv) => {
+                      const cat = srv.category || 'Otros';
+                      if (!acc[cat]) acc[cat] = [];
+                      acc[cat].push(srv);
+                      return acc;
+                    }, {})
+                  ).map(([category, catServices]) => (
+                    <div key={category} style={{ paddingBottom: '4px' }}>
+                      <div style={{ padding: '6px 8px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--secondary)', backgroundColor: '#f8fafc', borderRadius: '4px', marginTop: '4px', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {category}
+                      </div>
+                      {catServices.map(srv => {
+                        const isSelected = editingApp.services_json 
+                          ? editingApp.services_json.some(s => s.id === srv.id) 
+                          : editingApp.service_id === srv.id;
+                          
+                        return (
+                          <label key={srv.id} style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', gap: '12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={isSelected}
+                              onChange={(e) => {
+                                let newServices = editingApp.services_json || (editingApp.service_id ? [allServices.find(s => s.id === editingApp.service_id)] : []);
+                                if (e.target.checked) {
+                                  newServices = [...newServices, srv];
+                                } else {
+                                  newServices = newServices.filter(s => s.id !== srv.id);
+                                }
+                                setEditingApp({...editingApp, services_json: newServices, service_id: newServices[0]?.id || null});
+                              }}
+                              style={{ width: '16px', height: '16px', flexShrink: 0 }}
+                            />
+                            <span style={{ fontSize: '0.875rem' }}>{srv.name} <span style={{color: 'var(--secondary)'}}>({srv.price})</span></span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
