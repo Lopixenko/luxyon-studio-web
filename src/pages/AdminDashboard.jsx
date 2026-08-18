@@ -72,12 +72,16 @@ export default function AdminDashboard({ session, onLogout }) {
     e.preventDefault()
     setIsSaving(true)
     
-    // Check overlaps
-    const { data: dateApps } = await supabase
+    let query = supabase
       .from('appointments')
-      .select('*, services(duration)')
-      .eq('appointment_date', editingApp.appointment_date)
-      .neq('id', editingApp.id);
+      .select('id, appointment_time, services(duration), services_json')
+      .eq('appointment_date', editingApp.appointment_date);
+      
+    if (!editingApp.isNew) {
+      query = query.neq('id', editingApp.id);
+    }
+    
+    const { data: dateApps } = await query;
 
     let reqDur = 0;
     if (editingApp.services_json && editingApp.services_json.length > 0) {
@@ -91,11 +95,7 @@ export default function AdminDashboard({ session, onLogout }) {
     const startMins = parseInt(h) * 60 + parseInt(m);
     const endMins = startMins + reqDur;
 
-    if (startMins < 9 * 60 || endMins > 19 * 60) {
-      alert("La cita (incluyendo su duración) debe estar dentro del horario de 09:00 a 19:00.");
-      setIsSaving(false);
-      return;
-    }
+    // Permitimos a los admins reservar a cualquier hora, eliminando el límite estricto de 09:00-19:00 si así lo desean.
 
     let isOverlapping = false;
     for (const app of dateApps || []) {
@@ -117,21 +117,41 @@ export default function AdminDashboard({ session, onLogout }) {
       return;
     }
     
-    const { error } = await supabase
-      .from('appointments')
-      .update({
-        appointment_date: editingApp.appointment_date,
-        appointment_time: editingApp.appointment_time,
-        service_id: editingApp.service_id,
-        services_json: editingApp.services_json
-      })
-      .eq('id', editingApp.id)
+    let error = null;
+    
+    if (editingApp.isNew) {
+      const res = await supabase
+        .from('appointments')
+        .insert([{
+          client_name: editingApp.client_name,
+          client_phone: editingApp.client_phone,
+          appointment_date: editingApp.appointment_date,
+          appointment_time: editingApp.appointment_time,
+          service_id: editingApp.service_id,
+          services_json: editingApp.services_json,
+          status: 'confirmed'
+        }]);
+      error = res.error;
+    } else {
+      const res = await supabase
+        .from('appointments')
+        .update({
+          client_name: editingApp.client_name,
+          client_phone: editingApp.client_phone,
+          appointment_date: editingApp.appointment_date,
+          appointment_time: editingApp.appointment_time,
+          service_id: editingApp.service_id,
+          services_json: editingApp.services_json
+        })
+        .eq('id', editingApp.id);
+      error = res.error;
+    }
       
     setIsSaving(false)
     if (error) {
-      alert("Error al guardar la cita.")
+      alert("Error al guardar la cita.");
     } else {
-      setEditingApp(null)
+      setEditingApp(null);
       fetchAgenda() 
     }
   }
@@ -250,7 +270,16 @@ export default function AdminDashboard({ session, onLogout }) {
               <button onClick={() => changeWeek(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)' }}>
                 <ChevronLeft size={24} />
               </button>
-              <span style={{ fontWeight: 600, textTransform: 'capitalize', fontSize: '1.1rem' }}>{monthName}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontWeight: 600, textTransform: 'capitalize', fontSize: '1.1rem' }}>{monthName}</span>
+                <button 
+                  className="btn btn-outline" 
+                  style={{ padding: '4px 12px', fontSize: '0.8rem', borderRadius: '12px', backgroundColor: 'var(--primary)', color: 'white', border: 'none' }}
+                  onClick={() => setEditingApp({ isNew: true, client_name: '', client_phone: '', appointment_date: getDateString(selectedDate), appointment_time: '09:00', services_json: [] })}
+                >
+                  + Cita
+                </button>
+              </div>
               <button onClick={() => changeWeek(1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)' }}>
                 <ChevronRight size={24} />
               </button>
@@ -469,7 +498,7 @@ export default function AdminDashboard({ session, onLogout }) {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', boxSizing: 'border-box' }}>
           <div style={{ backgroundColor: 'white', width: '100%', maxWidth: '400px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--border)', backgroundColor: '#fafafa' }}>
-              <h3 style={{ fontWeight: 600, fontSize: '1.1rem' }}>Editar Cita</h3>
+              <h3 style={{ fontWeight: 600, fontSize: '1.1rem' }}>{editingApp.isNew ? 'Nueva Cita' : 'Editar Cita'}</h3>
               <button onClick={() => setEditingApp(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--secondary)' }}>
                 <X size={20} />
               </button>
@@ -478,15 +507,25 @@ export default function AdminDashboard({ session, onLogout }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Nombre y Apellidos</label>
-                  <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '1rem', color: 'var(--text)' }}>
-                    {editingApp.client_name}
-                  </div>
+                  <input 
+                    type="text" 
+                    value={editingApp.client_name} 
+                    onChange={e => setEditingApp({...editingApp, client_name: e.target.value})}
+                    placeholder="Nombre del cliente"
+                    required
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '1rem', color: 'var(--text)', boxSizing: 'border-box' }}
+                  />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Teléfono</label>
-                  <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '1rem', color: 'var(--text)' }}>
-                    {editingApp.client_phone}
-                  </div>
+                  <input 
+                    type="text" 
+                    value={editingApp.client_phone} 
+                    onChange={e => setEditingApp({...editingApp, client_phone: e.target.value})}
+                    placeholder="Teléfono"
+                    required
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '1rem', color: 'var(--text)', boxSizing: 'border-box' }}
+                  />
                 </div>
               </div>
               <div>
@@ -540,11 +579,6 @@ export default function AdminDashboard({ session, onLogout }) {
                     type="date" 
                     value={editingApp.appointment_date} 
                     onChange={e => {
-                      const d = new Date(e.target.value);
-                      if (d.getDay() === 0 || d.getDay() === 6) {
-                        alert("Solo de lunes a viernes.");
-                        return;
-                      }
                       setEditingApp({...editingApp, appointment_date: e.target.value});
                     }} 
                     style={{ width: '100%', minWidth: 0, WebkitAppearance: 'none', appearance: 'none', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: '#f8fafc', color: 'var(--text)', boxSizing: 'border-box' }} 
