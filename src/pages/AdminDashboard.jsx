@@ -547,7 +547,7 @@ export default function AdminDashboard({ session, onLogout }) {
                       }
                       setEditingApp({...editingApp, appointment_date: e.target.value});
                     }} 
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: '#f8fafc', color: 'var(--text)' }} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: '#f8fafc', color: 'var(--text)', boxSizing: 'border-box' }} 
                   />
                 </div>
                 <div style={{ flex: 1 }}>
@@ -557,7 +557,7 @@ export default function AdminDashboard({ session, onLogout }) {
                     value={editingApp.appointment_time} 
                     min="09:00" max="19:00"
                     onChange={e => setEditingApp({...editingApp, appointment_time: e.target.value})} 
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: '#f8fafc', color: 'var(--text)' }} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: '#f8fafc', color: 'var(--text)', boxSizing: 'border-box' }} 
                   />
                 </div>
               </div>
@@ -586,7 +586,7 @@ export default function AdminDashboard({ session, onLogout }) {
                   type="text" 
                   value={editingClient.name} 
                   onChange={e => setEditingClient({...editingClient, name: e.target.value})}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit', fontSize: '1rem' }} 
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', boxSizing: 'border-box' }} 
                 />
               </div>
               <div>
@@ -595,7 +595,7 @@ export default function AdminDashboard({ session, onLogout }) {
                   type="text" 
                   value={editingClient.phone} 
                   onChange={e => setEditingClient({...editingClient, phone: e.target.value})}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit', fontSize: '1rem' }} 
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', boxSizing: 'border-box' }} 
                 />
               </div>
               <div>
@@ -605,7 +605,7 @@ export default function AdminDashboard({ session, onLogout }) {
                   onChange={e => setEditingClient({...editingClient, notes: e.target.value})}
                   placeholder="Añade aquí cualquier detalle importante sobre esta clienta..."
                   rows={4}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit', fontSize: '0.875rem', resize: 'vertical' }} 
+                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit', fontSize: '0.875rem', resize: 'vertical', boxSizing: 'border-box' }} 
                 />
               </div>
               <button type="submit" disabled={isSaving} className="btn btn-full" style={{ marginTop: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
