@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar as CalendarIcon, List, Settings, LogOut, Clock, MessageCircle, ChevronLeft, ChevronRight, Edit3, X, Save, Users, User } from 'lucide-react'
+import { Calendar as CalendarIcon, List, Settings, LogOut, Clock, MessageCircle, ChevronLeft, ChevronRight, Edit3, X, Save, Users, User, Wallet, DollarSign } from 'lucide-react'
 import { supabase } from '../supabase'
 
 export default function AdminDashboard({ session, onLogout }) {
@@ -29,6 +29,11 @@ export default function AdminDashboard({ session, onLogout }) {
   // --- SETTINGS STATE ---
   const [specialDays, setSpecialDays] = useState([])
 
+  // --- CONTABILIDAD STATE ---
+  const [accDate, setAccDate] = useState(new Date())
+  const [accAppointments, setAccAppointments] = useState([])
+  const [loadingAcc, setLoadingAcc] = useState(false)
+
   const [isSaving, setIsSaving] = useState(false)
 
   const getDateString = (d) => {
@@ -57,6 +62,27 @@ export default function AdminDashboard({ session, onLogout }) {
     if (data) setSpecialDays(data)
   }
 
+  const fetchAccounting = async () => {
+    setLoadingAcc(true)
+    const year = accDate.getFullYear()
+    const month = accDate.getMonth() + 1
+    const startStr = `${year}-${month.toString().padStart(2, '0')}-01`
+    const nextMonth = month === 12 ? 1 : month + 1
+    const nextYear = month === 12 ? year + 1 : year
+    const endStr = `${nextYear}-${nextMonth.toString().padStart(2, '0')}-01`
+    
+    // We select all appointments in the month to calculate week and month totals
+    const { data } = await supabase
+      .from('appointments')
+      .select('*, services(price)')
+      .gte('appointment_date', startStr)
+      .lt('appointment_date', endStr)
+      .order('appointment_date', { ascending: false })
+      
+    if (data) setAccAppointments(data)
+    setLoadingAcc(false)
+  }
+
   useEffect(() => {
     if (activeTab === 'agenda') {
       fetchAgenda()
@@ -64,8 +90,10 @@ export default function AdminDashboard({ session, onLogout }) {
       fetchClients()
     } else if (activeTab === 'servicios') {
       fetchSpecialDays()
+    } else if (activeTab === 'contabilidad') {
+      fetchAccounting()
     }
-  }, [selectedDate, activeTab])
+  }, [selectedDate, accDate, activeTab])
 
   const notifyClient = (app) => {
     const text = `¡Hola ${app.client_name}! Soy de LuxyOn Studio. Te escribo para confirmar tu cita para ${getAppNames(app)} el día ${app.appointment_date} a las ${app.appointment_time?.substring(0, 5)}. ¡Nos vemos pronto!`;
@@ -220,9 +248,48 @@ export default function AdminDashboard({ session, onLogout }) {
 
   const getAppNames = (app) => {
     if (app.services_json && app.services_json.length > 0) {
-      return app.services_json.map(s => s.name).join(' + ');
+      return app.services_json.map(s => s.name).join(', ');
     }
-    return app.services?.name;
+    return app.services?.name || 'Servicio sin nombre';
+  }
+
+  const parsePrice = (priceStr) => {
+    if (!priceStr) return 0;
+    return parseFloat(priceStr.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+  }
+
+  const getAppPrice = (app) => {
+    let total = 0;
+    if (app.services_json && app.services_json.length > 0) {
+      app.services_json.forEach(s => {
+        total += parsePrice(s.price);
+      });
+    } else {
+      total += parsePrice(app.services?.price);
+    }
+    return total;
+  }
+
+  const isSameWeek = (d1, d2) => {
+    const date1 = new Date(d1);
+    const date2 = new Date(d2);
+    // Lunes de la semana de date1
+    const day1 = date1.getDay() || 7;
+    date1.setDate(date1.getDate() - day1 + 1);
+    // Lunes de la semana de date2
+    const day2 = date2.getDay() || 7;
+    date2.setDate(date2.getDate() - day2 + 1);
+    
+    return date1.toDateString() === date2.toDateString();
+  }
+
+  const updatePaymentMethod = async (appId, method) => {
+    const { error } = await supabase.from('appointments').update({ payment_method: method }).eq('id', appId);
+    if (error) {
+      alert("Error al actualizar método de pago. ¿Has añadido la columna 'payment_method' en Supabase?");
+    } else {
+      setAccAppointments(prev => prev.map(a => a.id === appId ? { ...a, payment_method: method } : a));
+    }
   }
 
   // --- CONFIGURACIÓN DEL CALENDARIO ---
@@ -502,6 +569,112 @@ export default function AdminDashboard({ session, onLogout }) {
           )}
         </div>
       )}
+      {/* -------------------- TAB CONTABILIDAD -------------------- */}
+      {activeTab === 'contabilidad' && (
+        <div className="section" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 className="section-title" style={{ margin: 0 }}>Contabilidad</h2>
+            <input 
+              type="date" 
+              className="input" 
+              value={getDateString(accDate)} 
+              onChange={(e) => setAccDate(new Date(e.target.value))}
+              style={{ width: 'auto' }}
+            />
+          </div>
+
+          {loadingAcc ? (
+            <p style={{ textAlign: 'center', color: 'var(--secondary)', padding: '40px 0' }}>Calculando caja...</p>
+          ) : (
+            <>
+              {(() => {
+                const selectedStr = getDateString(accDate);
+                
+                let dayTotal = 0;
+                let weekTotal = 0;
+                let monthTotal = 0;
+                
+                const dayApps = [];
+
+                accAppointments.forEach(app => {
+                  const price = getAppPrice(app);
+                  
+                  // Sumar mes completo
+                  monthTotal += price;
+                  
+                  // Sumar semana
+                  if (isSameWeek(accDate, new Date(app.appointment_date))) {
+                    weekTotal += price;
+                  }
+                  
+                  // Citas y total del día seleccionado
+                  if (app.appointment_date === selectedStr) {
+                    dayTotal += price;
+                    dayApps.push(app);
+                  }
+                });
+
+                return (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', marginBottom: '32px' }}>
+                      <div style={{ backgroundColor: 'var(--primary)', color: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 8px 24px rgba(168,136,118,0.25)' }}>
+                        <p style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '4px' }}>Ingresos de Hoy</p>
+                        <h3 style={{ fontSize: '2rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}><DollarSign size={28} /> {dayTotal}€</h3>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <div style={{ flex: 1, backgroundColor: 'white', border: '1px solid var(--border)', padding: '16px', borderRadius: '16px' }}>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--secondary)', marginBottom: '4px' }}>Semana</p>
+                          <h4 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text)' }}>{weekTotal}€</h4>
+                        </div>
+                        <div style={{ flex: 1, backgroundColor: 'white', border: '1px solid var(--border)', padding: '16px', borderRadius: '16px' }}>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--secondary)', marginBottom: '4px' }}>Mes Completo</p>
+                          <h4 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text)' }}>{monthTotal}€</h4>
+                        </div>
+                      </div>
+                    </div>
+
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '16px', color: 'var(--text)' }}>Citas del Día</h3>
+                    
+                    {dayApps.length === 0 ? (
+                      <p style={{ textAlign: 'center', color: 'var(--secondary)', fontStyle: 'italic', padding: '20px 0' }}>No hay citas registradas hoy.</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {dayApps.map(app => (
+                          <div key={app.id} style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                              <h4 style={{ fontWeight: 600 }}>{app.client_name}</h4>
+                              <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{getAppPrice(app)}€</span>
+                            </div>
+                            <p style={{ fontSize: '0.875rem', color: 'var(--secondary)', marginBottom: '16px' }}>
+                              <Clock size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }}/> 
+                              {app.appointment_time?.substring(0,5)} • {getAppNames(app)}
+                            </p>
+                            
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--secondary)' }}>Método de pago:</span>
+                              <select 
+                                value={app.payment_method || ''}
+                                onChange={(e) => updatePaymentMethod(app.id, e.target.value)}
+                                style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem', outline: 'none', backgroundColor: app.payment_method ? '#f8fafc' : 'white', fontWeight: 500 }}
+                              >
+                                <option value="">Pendiente...</option>
+                                <option value="efectivo">Efectivo 💵</option>
+                                <option value="tarjeta">Tarjeta 💳</option>
+                              </select>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </>
+          )}
+        </div>
+      )}
+
       {/* -------------------- TAB AJUSTES / SERVICIOS -------------------- */}
       {activeTab === 'servicios' && (
         <div className="section">
@@ -714,6 +887,10 @@ export default function AdminDashboard({ session, onLogout }) {
         <button onClick={() => setActiveTab('clientas')} style={{ flex: 1, background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'clientas' ? 'var(--primary)' : 'var(--secondary)', cursor: 'pointer', transition: 'color 0.2s' }}>
           <Users size={24} />
           <span style={{ fontSize: '0.75rem', marginTop: '4px', fontWeight: activeTab === 'clientas' ? 600 : 500 }}>Clientas</span>
+        </button>
+        <button onClick={() => setActiveTab('contabilidad')} style={{ flex: 1, background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'contabilidad' ? 'var(--primary)' : 'var(--secondary)', cursor: 'pointer', transition: 'color 0.2s' }}>
+          <Wallet size={24} />
+          <span style={{ fontSize: '0.75rem', marginTop: '4px', fontWeight: activeTab === 'contabilidad' ? 600 : 500 }}>Caja</span>
         </button>
         <button onClick={() => setActiveTab('servicios')} style={{ flex: 1, background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'servicios' ? 'var(--primary)' : 'var(--secondary)', cursor: 'pointer', transition: 'color 0.2s' }}>
           <Settings size={24} />
