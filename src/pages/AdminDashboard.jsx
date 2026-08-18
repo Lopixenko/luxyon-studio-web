@@ -377,7 +377,7 @@ export default function AdminDashboard({ session, onLogout }) {
                           // Diseño compacto para 15 minutos
                           <>
                             <span style={{ fontWeight: 700, fontSize: '0.75rem', whiteSpace: 'nowrap' }}>{app.appointment_time.substring(0,5)}</span>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+                            <span title={getAppNames(app)} style={{ fontSize: '0.75rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
                               {app.client_name} • {getAppNames(app)}
                             </span>
                             <button 
@@ -401,7 +401,7 @@ export default function AdminDashboard({ session, onLogout }) {
                                 <MessageCircle size={12} />
                               </button>
                             </div>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: durationMins <= 30 ? 1 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            <span title={getAppNames(app)} style={{ fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: durationMins <= 30 ? 1 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                               {app.client_name} • {getAppNames(app)}
                             </span>
                           </>
@@ -475,11 +475,18 @@ export default function AdminDashboard({ session, onLogout }) {
               </button>
             </div>
             <form onSubmit={handleSaveEditApp} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <p style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '8px', color: 'var(--secondary)' }}>Cliente</p>
-                <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <p style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>{editingApp.client_name}</p>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--secondary)' }}>📞 {editingApp.client_phone}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Nombre y Apellidos</label>
+                  <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '1rem', color: 'var(--text)' }}>
+                    {editingApp.client_name}
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Teléfono</label>
+                  <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '1rem', color: 'var(--text)' }}>
+                    {editingApp.client_phone}
+                  </div>
                 </div>
               </div>
               <div>
@@ -512,8 +519,8 @@ export default function AdminDashboard({ session, onLogout }) {
                   })}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Fecha</label>
                   <input 
                     type="date" 
