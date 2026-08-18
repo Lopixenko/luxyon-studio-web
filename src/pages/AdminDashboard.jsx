@@ -518,7 +518,7 @@ export default function AdminDashboard({ session, onLogout }) {
                 if (!val) return;
                 const { error } = await supabase.from('special_days').insert([{ date: val }]);
                 if (error) {
-                  alert("Error al abrir el día. ¿Has creado la tabla 'special_days' en Supabase?");
+                  alert(`Error de Supabase: ${error.message || JSON.stringify(error)}`);
                 } else {
                   alert("¡Día abierto correctamente! Las clientas ya pueden reservar en esa fecha.");
                   fetchSpecialDays();
