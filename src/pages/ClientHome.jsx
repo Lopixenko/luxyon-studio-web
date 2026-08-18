@@ -218,14 +218,29 @@ export default function ClientHome() {
               {catServices.map(service => {
                 const isSelected = selectedServices.find(s => s.id === service.id);
                 return (
-                  <div key={service.id} className="service-card" style={{ border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)', cursor: 'pointer' }} onClick={() => handleToggleService(service)}>
-                    <div className="service-info">
-                      <h3>{service.name}</h3>
-                      <p>{service.duration} • {service.description}</p>
+                  <div 
+                    key={service.id} 
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      padding: '16px', 
+                      marginBottom: '12px',
+                      borderRadius: '12px',
+                      border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)', 
+                      backgroundColor: isSelected ? '#faf8f6' : 'white',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }} 
+                    onClick={() => handleToggleService(service)}
+                  >
+                    <div className="service-info" style={{ flex: 1, paddingRight: '12px' }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 500, color: isSelected ? 'var(--primary)' : 'var(--text)' }}>{service.name}</h3>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--secondary)', marginTop: '4px' }}>{service.duration} • {service.description}</p>
                     </div>
-                    <div className="price-booking">
-                      <span className="service-price">{service.price}</span>
-                      <button className={`btn ${isSelected ? 'btn-outline' : ''}`} style={{ width: '80px', padding: '8px' }}>
+                    <div className="price-booking" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                      <span className="service-price" style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '8px' }}>{service.price}</span>
+                      <button className={`btn ${isSelected ? 'btn-outline' : ''}`} style={{ width: '80px', padding: '6px 0', fontSize: '0.75rem' }} onClick={(e) => { e.stopPropagation(); handleToggleService(service); }}>
                         {isSelected ? 'Quitar' : 'Añadir'}
                       </button>
                     </div>
