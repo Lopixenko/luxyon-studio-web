@@ -74,10 +74,6 @@ export default function ClientHome() {
     for (let h = 9; h < 19; h++) {
       for (let m = 0; m < 60; m += 15) {
         const startMins = h * 60 + m;
-        
-        // Limitar última hora de reserva a las 17:30 (17 * 60 + 30 = 1050)
-        if (startMins > 1050) continue;
-        
         const endMins = startMins + reqDuration;
         
         // No puede terminar más tarde de las 19:00 (19 * 60 = 1140)
