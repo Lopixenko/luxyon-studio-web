@@ -53,10 +53,13 @@ export default function ClientHome() {
 
     const dateObj = new Date(val);
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) {
-      setDateError("Solo abrimos de Lunes a Viernes.");
-      setAppointmentDate('');
-      setExistingAppointments([]);
-      return;
+      const { data: specialDays } = await supabase.from('special_days').select('*').eq('date', val);
+      if (!specialDays || specialDays.length === 0) {
+        setDateError("Los fines de semana no están disponibles. Si no puedes pedir cita otro día entre semana, notifícame vía WhatsApp o Instagram para poder ponerte en lista de espera.");
+        setAppointmentDate('');
+        setExistingAppointments([]);
+        return;
+      }
     }
 
     // Fetch existing appointments for this date to calculate availability

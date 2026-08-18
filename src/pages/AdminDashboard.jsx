@@ -26,6 +26,9 @@ export default function AdminDashboard({ session, onLogout }) {
   const [loadingClients, setLoadingClients] = useState(false)
   const [editingClient, setEditingClient] = useState(null)
   
+  // --- SETTINGS STATE ---
+  const [specialDays, setSpecialDays] = useState([])
+
   const [isSaving, setIsSaving] = useState(false)
 
   const getDateString = (d) => {
@@ -49,11 +52,18 @@ export default function AdminDashboard({ session, onLogout }) {
     setLoadingClients(false)
   }
 
+  const fetchSpecialDays = async () => {
+    const { data } = await supabase.from('special_days').select('*').order('date')
+    if (data) setSpecialDays(data)
+  }
+
   useEffect(() => {
     if (activeTab === 'agenda') {
       fetchAgenda()
     } else if (activeTab === 'clientas') {
       fetchClients()
+    } else if (activeTab === 'servicios') {
+      fetchSpecialDays()
     }
   }, [selectedDate, activeTab])
 
@@ -490,6 +500,51 @@ export default function AdminDashboard({ session, onLogout }) {
               ))}
             </div>
           )}
+        </div>
+      )}
+      {/* -------------------- TAB AJUSTES / SERVICIOS -------------------- */}
+      {activeTab === 'servicios' && (
+        <div className="section">
+          <h2 className="section-title">Ajustes</h2>
+          
+          <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>Días Especiales Abiertos</h3>
+            <p style={{ fontSize: '0.875rem', color: 'var(--secondary)', marginBottom: '16px' }}>
+              Si quieres trabajar un sábado o domingo, ábrelo aquí para que las clientas puedan pedir cita ese día.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
+              <input type="date" className="input" id="specialDateInput" style={{ flex: 1 }} />
+              <button className="btn" onClick={async () => {
+                const val = document.getElementById('specialDateInput').value;
+                if (!val) return;
+                const { error } = await supabase.from('special_days').insert([{ date: val }]);
+                if (error) {
+                  alert("Error al abrir el día. ¿Has creado la tabla 'special_days' en Supabase?");
+                } else {
+                  alert("¡Día abierto correctamente! Las clientas ya pueden reservar en esa fecha.");
+                  fetchSpecialDays();
+                }
+              }}>Abrir Día</button>
+            </div>
+            
+            {specialDays.length > 0 ? (
+              <ul style={{ listStyle: 'none', padding: 0, borderTop: '1px solid var(--border)' }}>
+                {specialDays.map(day => (
+                  <li key={day.id} style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 500 }}>{day.date}</span>
+                    <button style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer', padding: '4px' }} onClick={async () => {
+                      if (window.confirm('¿Seguro que quieres cerrar este día?')) {
+                        await supabase.from('special_days').delete().eq('id', day.id);
+                        fetchSpecialDays();
+                      }
+                    }}>Eliminar</button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p style={{ fontSize: '0.875rem', color: 'var(--secondary)', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>No tienes días especiales abiertos.</p>
+            )}
+          </div>
         </div>
       )}
 
