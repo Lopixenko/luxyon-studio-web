@@ -65,9 +65,9 @@ export default function ClientHome() {
   };
 
   const generateAvailableSlots = () => {
-    if (!appointmentDate || !selectedService) return [];
+    if (!appointmentDate || selectedServices.length === 0) return [];
     
-    const reqDuration = parseDuration(selectedService.duration);
+    const reqDuration = totalDuration;
     const slots = [];
     
     // De 9:00 a 19:00, con saltos de 15 mins
@@ -85,7 +85,14 @@ export default function ClientHome() {
           if (!app.appointment_time) continue;
           const [appH, appM] = app.appointment_time.split(':');
           const appStartMins = parseInt(appH) * 60 + parseInt(appM);
-          const appDur = parseDuration(app.services?.duration);
+          
+          let appDur = 0;
+          if (app.services_json && app.services_json.length > 0) {
+            appDur = app.services_json.reduce((acc, curr) => acc + parseDuration(curr.duration), 0);
+          } else {
+            appDur = parseDuration(app.services?.duration);
+          }
+          
           const appEndMins = appStartMins + appDur;
           
           if (startMins < appEndMins && endMins > appStartMins) {
@@ -113,6 +120,25 @@ export default function ClientHome() {
     }
     fetchData();
   }, []);
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleToggleService = (service) => {
+    if (selectedServices.find(s => s.id === service.id)) {
+      setSelectedServices(selectedServices.filter(s => s.id !== service.id));
+    } else {
+      setSelectedServices([...selectedServices, service]);
+    }
+  };
+
+  const parsePrice = (priceStr) => {
+    if (!priceStr) return 0;
+    const num = parseFloat(priceStr.replace(/[^\d.,]/g, '').replace(',', '.'));
+    return isNaN(num) ? 0 : num;
+  };
+
+  const totalDuration = selectedServices.reduce((acc, curr) => acc + parseDuration(curr.duration), 0);
+  const totalPrice = selectedServices.reduce((acc, curr) => acc + parsePrice(curr.price), 0);
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -125,16 +151,15 @@ export default function ClientHome() {
     
     const fullName = `${clientName} ${clientLastName}`;
     
-    // 1. Guardar o actualizar la Clienta en el nuevo CRM (usando el teléfono como ID único)
     await supabase.from('clients').upsert({
       name: fullName,
       phone: clientPhone
     }, { onConflict: 'phone' });
 
-    // 2. Guardar la cita normal
     const { error } = await supabase.from('appointments').insert([
       {
-        service_id: selectedService.id,
+        service_id: selectedServices[0].id, // para no romper la base de datos si la columna es requerida
+        services_json: selectedServices,
         client_name: fullName,
         client_phone: clientPhone,
         appointment_date: appointmentDate,
@@ -146,17 +171,15 @@ export default function ClientHome() {
 
     if (error) {
       console.error(error);
-      alert("Hubo un error al guardar la cita.");
+      alert("Error al reservar. Inténtalo de nuevo.");
     } else {
       setBookingSuccess(true);
-      setTimeout(() => {
-        closeBookingModal();
-      }, 3000);
     }
   };
 
   const closeBookingModal = () => {
-    setSelectedService(null);
+    setIsModalOpen(false);
+    setSelectedServices([]);
     setBookingSuccess(false);
     setClientName('');
     setClientLastName('');
@@ -170,7 +193,7 @@ export default function ClientHome() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="mobile-container">
+    <div className="mobile-container" style={{ paddingBottom: selectedServices.length > 0 ? '80px' : '0' }}>
       {/* Header Info */}
       <header className="header">
         <h1>LuxyOn Studio</h1>
@@ -192,20 +215,23 @@ export default function ClientHome() {
               {category}
             </h2>
             <div className="services-list">
-              {catServices.map(service => (
-                <div key={service.id} className="service-card">
-                  <div className="service-info">
-                    <h3>{service.name}</h3>
-                    <p>{service.duration} • {service.description}</p>
+              {catServices.map(service => {
+                const isSelected = selectedServices.find(s => s.id === service.id);
+                return (
+                  <div key={service.id} className="service-card" style={{ border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)', cursor: 'pointer' }} onClick={() => handleToggleService(service)}>
+                    <div className="service-info">
+                      <h3>{service.name}</h3>
+                      <p>{service.duration} • {service.description}</p>
+                    </div>
+                    <div className="price-booking">
+                      <span className="service-price">{service.price}</span>
+                      <button className={`btn ${isSelected ? 'btn-outline' : ''}`} style={{ width: '80px', padding: '8px' }}>
+                        {isSelected ? 'Quitar' : 'Añadir'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="price-booking">
-                    <span className="service-price">{service.price}</span>
-                    <button className="btn" onClick={() => setSelectedService(service)}>
-                      Reservar
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
@@ -238,8 +264,21 @@ export default function ClientHome() {
         </button>
       </section>
 
+      {/* Floating Cart Bar */}
+      {selectedServices.length > 0 && !isModalOpen && (
+        <div style={{ position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 40px)', maxWidth: '440px', backgroundColor: '#1e293b', color: 'white', padding: '16px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)', zIndex: 50 }}>
+          <div>
+            <div style={{ fontWeight: 600 }}>{selectedServices.length} {selectedServices.length === 1 ? 'servicio' : 'servicios'}</div>
+            <div style={{ fontSize: '0.875rem', color: '#cbd5e1' }}>{totalPrice}€ • {totalDuration} min</div>
+          </div>
+          <button className="btn" style={{ backgroundColor: 'white', color: '#1e293b', padding: '10px 20px' }} onClick={() => setIsModalOpen(true)}>
+            Continuar
+          </button>
+        </div>
+      )}
+
       {/* Booking Modal */}
-      {selectedService && (
+      {isModalOpen && (
         <div className="booking-modal-overlay" onClick={closeBookingModal}>
           <div className="booking-modal" onClick={e => e.stopPropagation()}>
             <button className="modal-close" onClick={closeBookingModal}>
@@ -255,9 +294,10 @@ export default function ClientHome() {
             ) : (
               <>
                 <h2 style={{fontSize: '1.25rem', marginBottom: '8px'}}>Reservar cita</h2>
-                <h3 style={{fontWeight: 500, marginBottom: '24px', color: 'var(--secondary)'}}>
-                  {selectedService.name} • {selectedService.price}
-                </h3>
+                <div style={{fontWeight: 500, marginBottom: '24px', color: 'var(--secondary)', fontSize: '0.875rem'}}>
+                  {selectedServices.map(s => <div key={s.id}>• {s.name}</div>)}
+                  <div style={{ marginTop: '8px', color: '#1e293b', fontWeight: 600 }}>Total: {totalPrice}€ ({totalDuration} min)</div>
+                </div>
                 
                 <form onSubmit={handleBooking} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div>

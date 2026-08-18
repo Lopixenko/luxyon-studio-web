@@ -58,7 +58,7 @@ export default function AdminDashboard({ session, onLogout }) {
   }, [selectedDate, activeTab])
 
   const notifyClient = (app) => {
-    const text = `¡Hola ${app.client_name}! Soy de LuxyOn Studio. Te escribo para confirmar tu cita para ${app.services?.name} el día ${app.appointment_date} a las ${app.appointment_time?.substring(0, 5)}. ¡Nos vemos pronto!`;
+    const text = `¡Hola ${app.client_name}! Soy de LuxyOn Studio. Te escribo para confirmar tu cita para ${getAppNames(app)} el día ${app.appointment_date} a las ${app.appointment_time?.substring(0, 5)}. ¡Nos vemos pronto!`;
     const waLink = `https://wa.me/${app.client_phone.replace(/\+/g, '').replace(/ /g, '')}?text=${encodeURIComponent(text)}`;
     window.open(waLink, '_blank');
   }
@@ -79,8 +79,13 @@ export default function AdminDashboard({ session, onLogout }) {
       .eq('appointment_date', editingApp.appointment_date)
       .neq('id', editingApp.id);
 
-    const reqSrv = allServices.find(s => s.id === editingApp.service_id);
-    const reqDur = parseDuration(reqSrv?.duration);
+    let reqDur = 0;
+    if (editingApp.services_json && editingApp.services_json.length > 0) {
+      reqDur = getAppDuration(editingApp);
+    } else {
+      const reqSrv = allServices.find(s => s.id === editingApp.service_id);
+      reqDur = parseDuration(reqSrv?.duration);
+    }
     
     const [h, m] = editingApp.appointment_time.split(':');
     const startMins = parseInt(h) * 60 + parseInt(m);
@@ -97,7 +102,7 @@ export default function AdminDashboard({ session, onLogout }) {
       if (!app.appointment_time) continue;
       const [appH, appM] = app.appointment_time.split(':');
       const appStartMins = parseInt(appH) * 60 + parseInt(appM);
-      const appDur = parseDuration(app.services?.duration);
+      const appDur = getAppDuration(app);
       const appEndMins = appStartMins + appDur;
       
       if (startMins < appEndMins && endMins > appStartMins) {
@@ -166,6 +171,20 @@ export default function AdminDashboard({ session, onLogout }) {
     if (mMatch) minutes += parseInt(mMatch[1]);
     
     return isNaN(minutes) || minutes === 0 ? 60 : minutes;
+  }
+
+  const getAppDuration = (app) => {
+    if (app.services_json && app.services_json.length > 0) {
+      return app.services_json.reduce((sum, s) => sum + parseDuration(s.duration), 0);
+    }
+    return parseDuration(app.services?.duration);
+  }
+
+  const getAppNames = (app) => {
+    if (app.services_json && app.services_json.length > 0) {
+      return app.services_json.map(s => s.name).join(' + ');
+    }
+    return app.services?.name;
   }
 
   // --- CONFIGURACIÓN DEL CALENDARIO ---
@@ -319,7 +338,7 @@ export default function AdminDashboard({ session, onLogout }) {
                   if (h < startHour || h > endHour) return null; 
                   
                   const top = (h - startHour) * pixelsPerHour + (m / 60) * pixelsPerHour;
-                  const durationMins = parseDuration(app.services?.duration);
+                  const durationMins = getAppDuration(app);
                   const height = (durationMins / 60) * pixelsPerHour;
                   const colorTheme = appColors[app.id % appColors.length];
                   
@@ -351,7 +370,7 @@ export default function AdminDashboard({ session, onLogout }) {
                           <>
                             <span style={{ fontWeight: 700, fontSize: '0.75rem', whiteSpace: 'nowrap' }}>{app.appointment_time.substring(0,5)}</span>
                             <span style={{ fontSize: '0.75rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
-                              {app.client_name} • {app.services?.name}
+                              {app.client_name} • {getAppNames(app)}
                             </span>
                             <button 
                               onClick={(e) => { e.stopPropagation(); notifyClient(app); }}
@@ -375,7 +394,7 @@ export default function AdminDashboard({ session, onLogout }) {
                               </button>
                             </div>
                             <span style={{ fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: durationMins <= 30 ? 1 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                              {app.client_name} • {app.services?.name}
+                              {app.client_name} • {getAppNames(app)}
                             </span>
                           </>
                         )}
