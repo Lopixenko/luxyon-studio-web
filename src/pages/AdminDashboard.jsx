@@ -510,7 +510,6 @@ export default function AdminDashboard({ session, onLogout }) {
           <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)', marginBottom: '24px' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>Días Especiales Abiertos</h3>
             <p style={{ fontSize: '0.875rem', color: 'var(--secondary)', marginBottom: '16px' }}>
-              Si quieres trabajar un sábado o domingo, ábrelo aquí para que las clientas puedan pedir cita ese día.
             </p>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
               <input type="date" className="input" id="specialDateInput" style={{ flex: 1 }} />
