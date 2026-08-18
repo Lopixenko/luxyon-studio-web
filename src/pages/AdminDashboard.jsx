@@ -122,7 +122,8 @@ export default function AdminDashboard({ session, onLogout }) {
       .update({
         appointment_date: editingApp.appointment_date,
         appointment_time: editingApp.appointment_time,
-        service_id: editingApp.service_id
+        service_id: editingApp.service_id,
+        services_json: editingApp.services_json
       })
       .eq('id', editingApp.id)
       
@@ -482,14 +483,34 @@ export default function AdminDashboard({ session, onLogout }) {
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Servicio</label>
-                <select 
-                  value={editingApp.service_id} 
-                  onChange={e => setEditingApp({...editingApp, service_id: parseInt(e.target.value)})}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: 'white' }}
-                >
-                  {allServices.map(srv => <option key={srv.id} value={srv.id}>{srv.name} ({srv.price})</option>)}
-                </select>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>Servicios</label>
+                <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '8px', padding: '4px', backgroundColor: 'white' }}>
+                  {allServices.map(srv => {
+                    const isSelected = editingApp.services_json 
+                      ? editingApp.services_json.some(s => s.id === srv.id) 
+                      : editingApp.service_id === srv.id;
+                      
+                    return (
+                      <label key={srv.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 8px', gap: '12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isSelected}
+                          onChange={(e) => {
+                            let newServices = editingApp.services_json || (editingApp.service_id ? [allServices.find(s => s.id === editingApp.service_id)] : []);
+                            if (e.target.checked) {
+                              newServices = [...newServices, srv];
+                            } else {
+                              newServices = newServices.filter(s => s.id !== srv.id);
+                            }
+                            setEditingApp({...editingApp, services_json: newServices, service_id: newServices[0]?.id || null});
+                          }}
+                          style={{ width: '16px', height: '16px' }}
+                        />
+                        <span style={{ fontSize: '0.875rem' }}>{srv.name} ({srv.price})</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
