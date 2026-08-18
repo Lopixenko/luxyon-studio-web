@@ -179,23 +179,36 @@ export default function ClientHome() {
 
       {/* Services Section */}
       <section className="section">
-        <h2 className="section-title">Servicios</h2>
-        <div className="services-list">
-          {services.map(service => (
-            <div key={service.id} className="service-card">
-              <div className="service-info">
-                <h3>{service.name}</h3>
-                <p>{service.duration} • {service.description}</p>
-              </div>
-              <div className="price-booking">
-                <span className="service-price">{service.price}</span>
-                <button className="btn" onClick={() => setSelectedService(service)}>
-                  Reservar
-                </button>
-              </div>
+        {Object.entries(
+          services.reduce((acc, service) => {
+            const cat = service.category || 'Servicios';
+            if (!acc[cat]) acc[cat] = [];
+            acc[cat].push(service);
+            return acc;
+          }, {})
+        ).map(([category, catServices]) => (
+          <div key={category} style={{ marginBottom: '32px' }}>
+            <h2 className="section-title" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '8px', marginBottom: '16px', color: 'var(--text)' }}>
+              {category}
+            </h2>
+            <div className="services-list">
+              {catServices.map(service => (
+                <div key={service.id} className="service-card">
+                  <div className="service-info">
+                    <h3>{service.name}</h3>
+                    <p>{service.duration} • {service.description}</p>
+                  </div>
+                  <div className="price-booking">
+                    <span className="service-price">{service.price}</span>
+                    <button className="btn" onClick={() => setSelectedService(service)}>
+                      Reservar
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </section>
 
       {/* Reviews Section */}
