@@ -401,7 +401,7 @@ export default function AdminDashboard({ session, onLogout }) {
                                 <MessageCircle size={12} />
                               </button>
                             </div>
-                            <span title={getAppNames(app)} style={{ fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: durationMins <= 30 ? 1 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            <span title={getAppNames(app)} style={{ fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: Math.max(1, Math.floor(durationMins / 15)), WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                               {app.client_name} • {getAppNames(app)}
                             </span>
                           </>
@@ -533,7 +533,7 @@ export default function AdminDashboard({ session, onLogout }) {
                       }
                       setEditingApp({...editingApp, appointment_date: e.target.value});
                     }} 
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit' }} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: '#f8fafc', color: 'var(--text)' }} 
                   />
                 </div>
                 <div style={{ flex: 1 }}>
@@ -543,7 +543,7 @@ export default function AdminDashboard({ session, onLogout }) {
                     value={editingApp.appointment_time} 
                     min="09:00" max="19:00"
                     onChange={e => setEditingApp({...editingApp, appointment_time: e.target.value})} 
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', outline: 'none', fontFamily: 'inherit' }} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', fontFamily: 'inherit', fontSize: '1rem', backgroundColor: '#f8fafc', color: 'var(--text)' }} 
                   />
                 </div>
               </div>
